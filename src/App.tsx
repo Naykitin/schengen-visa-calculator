@@ -14,6 +14,8 @@ import { CalendarView } from './components/CalendarView'
 import { InfoModal } from './components/InfoModal'
 import { BackupModal } from './components/BackupModal'
 import type { Trip } from './lib/schengen'
+import type { Language } from './lib/i18n'
+import { translations } from './lib/i18n'
 import {
   calculateSchengenSummary,
   toDateString,
@@ -29,6 +31,16 @@ export function App() {
   const [trips, setTrips] = useState<Trip[]>([])
   const [isLoaded, setIsLoaded] = useState(false)
   
+  // Internationalization: default to English with browser detection
+  const [lang, setLang] = useState<Language>(() => {
+    if (typeof window !== 'undefined' && navigator.language?.toLowerCase().startsWith('ru')) {
+      return 'ru'
+    }
+    return 'en'
+  })
+
+  const t = translations[lang]
+
   // Navigation tabs (Mobile / Tablet active tab)
   const [activeTab, setActiveTab] = useState<'trips' | 'planner' | 'calendar'>('trips')
   // Desktop secondary panel tab
@@ -99,6 +111,10 @@ export function App() {
   const summary = calculateSchengenSummary(trips, referenceDate)
 
   // Handlers
+  const handleToggleLanguage = () => {
+    setLang((prev) => (prev === 'en' ? 'ru' : 'en'))
+  }
+
   const handleSaveTrip = (trip: Trip) => {
     if (editingTrip) {
       setTrips((prev) => prev.map((t) => (t.id === trip.id ? trip : t)))
@@ -147,16 +163,16 @@ export function App() {
         id: 'sample_1',
         entryDate: toDateString(trip1Start),
         exitDate: toDateString(trip1End),
-        title: 'Италия (Рим, Флоренция)',
-        notes: 'Отпуск 15 дней',
+        title: lang === 'ru' ? 'Италия (Рим, Флоренция)' : 'Italy (Rome, Florence)',
+        notes: lang === 'ru' ? 'Отпуск 15 дней' : 'Vacation 15 days',
         isPlanned: false,
       },
       {
         id: 'sample_2',
         entryDate: toDateString(trip2Start),
         exitDate: toDateString(trip2End),
-        title: 'Германия (Берлин)',
-        notes: 'Конференция и выходные 21 день',
+        title: lang === 'ru' ? 'Германия (Берлин)' : 'Germany (Berlin)',
+        notes: lang === 'ru' ? 'Конференция 21 день' : 'Conference & stay 21 days',
         isPlanned: false,
       },
     ]
@@ -172,6 +188,9 @@ export function App() {
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col pb-24 sm:pb-8 selection:bg-blue-600/30 selection:text-blue-200">
       {/* Top Header */}
       <Header
+        lang={lang}
+        t={t}
+        onToggleLanguage={handleToggleLanguage}
         onOpenAddModal={handleAddTrip}
         onOpenBackupModal={() => setIsBackupModalOpen(true)}
         onOpenInfoModal={() => setIsInfoModalOpen(true)}
@@ -189,12 +208,16 @@ export function App() {
             <StatusCard
               summary={summary}
               referenceDate={referenceDate}
+              lang={lang}
+              t={t}
               onReferenceDateChange={setReferenceDate}
               onResetReferenceDate={() => setReferenceDate(toDateString(new Date()))}
             />
 
             <TripList
               trips={trips}
+              lang={lang}
+              t={t}
               onAddTrip={handleAddTrip}
               onEditTrip={handleEditTrip}
               onDeleteTrip={handleDeleteTrip}
@@ -215,7 +238,7 @@ export function App() {
                 }`}
               >
                 <Compass className="w-4 h-4" />
-                <span>Планировщик</span>
+                <span>{t.tabPlanner}</span>
               </button>
 
               <button
@@ -227,7 +250,7 @@ export function App() {
                 }`}
               >
                 <CalendarDays className="w-4 h-4" />
-                <span>Календарь</span>
+                <span>{t.tabCalendar}</span>
               </button>
             </div>
 
@@ -235,12 +258,16 @@ export function App() {
               {desktopSideTab === 'planner' ? (
                 <PlannerView
                   trips={trips}
+                  lang={lang}
+                  t={t}
                   onAddPlannedTrip={handleAddPlannedTrip}
                 />
               ) : (
                 <CalendarView
                   trips={trips}
                   selectedDate={referenceDate}
+                  lang={lang}
+                  t={t}
                   onSelectDate={(date) => setReferenceDate(date)}
                 />
               )}
@@ -248,7 +275,7 @@ export function App() {
 
             {/* Desktop hotkeys hint */}
             <div className="text-[11px] text-slate-500 text-center pt-2">
-              Горячие клавиши: <kbd className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-[10px]">N</kbd> — новая поездка, <kbd className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-[10px]">Esc</kbd> — закрыть
+              {t.desktopShortcutsHint}
             </div>
           </div>
         </div>
@@ -261,6 +288,8 @@ export function App() {
           <StatusCard
             summary={summary}
             referenceDate={referenceDate}
+            lang={lang}
+            t={t}
             onReferenceDateChange={setReferenceDate}
             onResetReferenceDate={() => setReferenceDate(toDateString(new Date()))}
           />
@@ -276,7 +305,7 @@ export function App() {
               }`}
             >
               <ListFilter className="w-4 h-4 shrink-0" />
-              <span>Поездки</span>
+              <span>{t.tabTrips}</span>
             </button>
 
             <button
@@ -288,7 +317,7 @@ export function App() {
               }`}
             >
               <Compass className="w-4 h-4 shrink-0" />
-              <span>Планировщик</span>
+              <span>{t.tabPlanner}</span>
             </button>
 
             <button
@@ -300,7 +329,7 @@ export function App() {
               }`}
             >
               <CalendarDays className="w-4 h-4 shrink-0" />
-              <span>Календарь</span>
+              <span>{t.tabCalendar}</span>
             </button>
           </div>
 
@@ -309,6 +338,8 @@ export function App() {
             {activeTab === 'trips' && (
               <TripList
                 trips={trips}
+                lang={lang}
+                t={t}
                 onAddTrip={handleAddTrip}
                 onEditTrip={handleEditTrip}
                 onDeleteTrip={handleDeleteTrip}
@@ -319,6 +350,8 @@ export function App() {
             {activeTab === 'planner' && (
               <PlannerView
                 trips={trips}
+                lang={lang}
+                t={t}
                 onAddPlannedTrip={handleAddPlannedTrip}
               />
             )}
@@ -327,6 +360,8 @@ export function App() {
               <CalendarView
                 trips={trips}
                 selectedDate={referenceDate}
+                lang={lang}
+                t={t}
                 onSelectDate={(date) => setReferenceDate(date)}
               />
             )}
@@ -335,13 +370,13 @@ export function App() {
       </main>
 
       {/* =========================================================================
-          MOBILE BOTTOM FLOATING ACTION BUTTON & BOTTOM NAVIGATION BAR
+          MOBILE BOTTOM FLOATING ACTION BUTTON
          ========================================================================= */}
       <div className="sm:hidden fixed bottom-4 right-4 z-40 safe-mb-bottom">
         <button
           onClick={handleAddTrip}
           className="w-14 h-14 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white shadow-xl shadow-blue-600/40 flex items-center justify-center border border-blue-400/30 active:scale-95 transition-all"
-          aria-label="Добавить поездку"
+          aria-label={t.addTrip}
         >
           <Plus className="w-7 h-7" />
         </button>
@@ -352,6 +387,8 @@ export function App() {
         isOpen={isTripModalOpen}
         initialTrip={editingTrip}
         existingTrips={trips}
+        lang={lang}
+        t={t}
         onClose={() => {
           setIsTripModalOpen(false)
           setEditingTrip(null)
@@ -362,6 +399,7 @@ export function App() {
       <BackupModal
         isOpen={isBackupModalOpen}
         trips={trips}
+        t={t}
         onClose={() => setIsBackupModalOpen(false)}
         onImportTrips={(importedTrips) => setTrips(importedTrips)}
         onClearAll={handleClearAll}
@@ -369,6 +407,7 @@ export function App() {
 
       <InfoModal
         isOpen={isInfoModalOpen}
+        t={t}
         onClose={() => setIsInfoModalOpen(false)}
       />
     </div>

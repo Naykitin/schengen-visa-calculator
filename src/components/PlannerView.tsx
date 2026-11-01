@@ -7,6 +7,7 @@ import {
   Sparkles,
 } from 'lucide-react'
 import type { Trip } from '../lib/schengen'
+import type { Language, TranslationDictionary } from '../lib/i18n'
 import {
   findEarliestEntryDate,
   getTripDuration,
@@ -14,18 +15,23 @@ import {
   toDateString,
 } from '../lib/schengen'
 import { format, parseISO } from 'date-fns'
-import { ru } from 'date-fns/locale'
+import { ru, enUS } from 'date-fns/locale'
 
 interface PlannerViewProps {
   trips: Trip[]
+  lang: Language
+  t: TranslationDictionary
   onAddPlannedTrip: (entryDate: string, exitDate: string, title: string) => void
 }
 
 export const PlannerView: React.FC<PlannerViewProps> = ({
   trips,
+  lang,
+  t,
   onAddPlannedTrip,
 }) => {
   const [mode, setMode] = useState<'find-earliest' | 'check-dates'>('find-earliest')
+  const dateLocale = lang === 'ru' ? ru : enUS
 
   // Find earliest state
   const [desiredDays, setDesiredDays] = useState<number>(14)
@@ -62,23 +68,23 @@ export const PlannerView: React.FC<PlannerViewProps> = ({
       <div className="grid grid-cols-2 p-1 bg-slate-900 border border-slate-800 rounded-2xl">
         <button
           onClick={() => setMode('find-earliest')}
-          className={`py-2 px-3 text-xs font-semibold rounded-xl transition-all ${
+          className={`py-2 px-3 text-xs font-semibold rounded-xl transition-all min-h-[40px] ${
             mode === 'find-earliest'
               ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
               : 'text-slate-400 hover:text-slate-200'
           }`}
         >
-          Когда можно поехать?
+          {t.plannerModeEarliest}
         </button>
         <button
           onClick={() => setMode('check-dates')}
-          className={`py-2 px-3 text-xs font-semibold rounded-xl transition-all ${
+          className={`py-2 px-3 text-xs font-semibold rounded-xl transition-all min-h-[40px] ${
             mode === 'check-dates'
               ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
               : 'text-slate-400 hover:text-slate-200'
           }`}
         >
-          Проверить мои даты
+          {t.plannerModeCheck}
         </button>
       </div>
 
@@ -90,10 +96,10 @@ export const PlannerView: React.FC<PlannerViewProps> = ({
             </div>
             <div>
               <h3 className="text-sm font-bold text-white">
-                Поиск ближайшей доступной даты
+                {t.earliestSearchTitle}
               </h3>
               <p className="text-[11px] text-slate-400">
-                Калькулятор найдёт день, когда лимит позволит совершить поездку
+                {t.earliestSearchDesc}
               </p>
             </div>
           </div>
@@ -101,7 +107,7 @@ export const PlannerView: React.FC<PlannerViewProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Сколько дней хотите пробыть?
+                {t.desiredDaysLabel}
               </label>
               <div className="flex items-center gap-2">
                 <input
@@ -112,7 +118,7 @@ export const PlannerView: React.FC<PlannerViewProps> = ({
                   onChange={(e) => setDesiredDays(Math.max(1, Math.min(90, parseInt(e.target.value) || 1)))}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm font-semibold text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
                 />
-                <span className="text-xs text-slate-400 shrink-0 font-medium">дней</span>
+                <span className="text-xs text-slate-400 shrink-0 font-medium">{t.days}</span>
               </div>
               {/* Quick pills */}
               <div className="flex gap-1.5 mt-2">
@@ -126,7 +132,7 @@ export const PlannerView: React.FC<PlannerViewProps> = ({
                         : 'bg-slate-800/80 text-slate-400 border-slate-700/60 hover:text-slate-200'
                     }`}
                   >
-                    {d} дн
+                    {d} {t.days}
                   </button>
                 ))}
               </div>
@@ -134,7 +140,7 @@ export const PlannerView: React.FC<PlannerViewProps> = ({
 
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Искать начиная с даты:
+                {t.searchFromDateLabel}
               </label>
               <input
                 type="date"
@@ -152,14 +158,14 @@ export const PlannerView: React.FC<PlannerViewProps> = ({
                 <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
                 <div>
                   <h4 className="text-xs font-bold text-emerald-300 uppercase tracking-wider">
-                    Поездка возможна!
+                    {t.tripPossibleTitle}
                   </h4>
                   <p className="text-sm font-bold text-white mt-0.5">
-                    С {format(parseISO(earliestResult.entryDate), 'd MMMM yyyy', { locale: ru })} по{' '}
-                    {format(parseISO(earliestResult.exitDate), 'd MMMM yyyy', { locale: ru })}
+                    {format(parseISO(earliestResult.entryDate), 'd MMMM yyyy', { locale: dateLocale })} —{' '}
+                    {format(parseISO(earliestResult.exitDate), 'd MMMM yyyy', { locale: dateLocale })}
                   </p>
                   <p className="text-xs text-emerald-200/80 mt-1">
-                    Длительность: <span className="font-semibold">{desiredDays} дней</span> без каких-либо нарушений правила 90/180.
+                    {t.tripPossibleDesc(desiredDays)}
                   </p>
                 </div>
               </div>
@@ -169,13 +175,15 @@ export const PlannerView: React.FC<PlannerViewProps> = ({
                   onAddPlannedTrip(
                     earliestResult.entryDate!,
                     earliestResult.exitDate!,
-                    `Запланированная поездка (${desiredDays} дн.)`
+                    lang === 'ru'
+                      ? `Запланированная поездка (${desiredDays} дн.)`
+                      : `Planned trip (${desiredDays} days)`
                   )
                 }
-                className="w-full flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold py-2.5 rounded-xl shadow-md shadow-emerald-700/20 active:scale-98 transition-all"
+                className="w-full flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold py-2.5 rounded-xl shadow-md shadow-emerald-700/20 active:scale-98 transition-all min-h-[44px]"
               >
                 <Plus className="w-4 h-4" />
-                Добавить в запланированные поездки
+                {t.addAsPlanBtn}
               </button>
             </div>
           ) : (
@@ -183,11 +191,11 @@ export const PlannerView: React.FC<PlannerViewProps> = ({
               <div className="flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
                 <span className="font-semibold">
-                  В ближайшие 365 дней невозможно непрерывно провести {desiredDays} дней
+                  {t.noDatesFoundTitle(desiredDays)}
                 </span>
               </div>
               <p className="text-amber-300/80 mt-1 text-[11px]">
-                Попробуйте уменьшить желаемое количество дней или проверьте существующие поездки.
+                {t.noDatesFoundDesc}
               </p>
             </div>
           )}
@@ -201,9 +209,9 @@ export const PlannerView: React.FC<PlannerViewProps> = ({
               <Calendar className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white">Проверка конкретных дат</h3>
+              <h3 className="text-sm font-bold text-white">{t.checkDatesTitle}</h3>
               <p className="text-[11px] text-slate-400">
-                Укажите планируемые даты въезда и выезда для проверки соответствия
+                {t.checkDatesDesc}
               </p>
             </div>
           </div>
@@ -211,7 +219,7 @@ export const PlannerView: React.FC<PlannerViewProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Дата въезда
+                {t.entryDateLabel}
               </label>
               <input
                 type="date"
@@ -223,7 +231,7 @@ export const PlannerView: React.FC<PlannerViewProps> = ({
 
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Дата выезда
+                {t.exitDateLabel}
               </label>
               <input
                 type="date"
@@ -251,21 +259,18 @@ export const PlannerView: React.FC<PlannerViewProps> = ({
                 )}
                 <div>
                   <h4 className="text-xs font-bold uppercase tracking-wider">
-                    {checkSimulation.isValid ? 'Поездка легальна' : 'Нарушение правила 90/180!'}
+                    {checkSimulation.isValid ? t.tripLegalTitle : t.tripViolationTitle}
                   </h4>
                   <p className="text-xs mt-1 text-slate-300">
-                    Длительность: <span className="font-semibold text-white">{checkDuration} дн.</span> |
-                    Макс. дней в 180-дневном окне:{' '}
-                    <span className="font-semibold text-white">
-                      {checkSimulation.maxDaysUsedDuringTrip} / 90
-                    </span>
+                    {t.durationDays(checkDuration)} | {t.maxUsedDuringTrip(checkSimulation.maxDaysUsedDuringTrip)}
                   </p>
                   {!checkSimulation.isValid && checkSimulation.firstViolationDate && (
                     <p className="text-xs text-rose-300 mt-1 font-semibold">
-                      Превышение лимита начинается с даты{' '}
-                      {format(parseISO(checkSimulation.firstViolationDate), 'd MMMM yyyy', {
-                        locale: ru,
-                      })}.
+                      {t.violationStartsFrom(
+                        format(parseISO(checkSimulation.firstViolationDate), 'd MMMM yyyy', {
+                          locale: dateLocale,
+                        })
+                      )}
                     </p>
                   )}
                 </div>
@@ -277,19 +282,21 @@ export const PlannerView: React.FC<PlannerViewProps> = ({
                     onAddPlannedTrip(
                       checkEntry,
                       checkExit,
-                      `Проверенная поездка (${checkDuration} дн.)`
+                      lang === 'ru'
+                        ? `Проверенная поездка (${checkDuration} дн.)`
+                        : `Verified trip (${checkDuration} days)`
                     )
                   }
-                  className="w-full flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold py-2.5 rounded-xl shadow-md shadow-blue-600/30 active:scale-98 transition-all"
+                  className="w-full flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold py-2.5 rounded-xl shadow-md shadow-blue-600/30 active:scale-98 transition-all min-h-[44px]"
                 >
                   <Plus className="w-4 h-4" />
-                  Сохранить как план
+                  {t.addAsPlanBtn}
                 </button>
               )}
             </div>
           ) : (
             <p className="text-xs text-slate-500 text-center">
-              Выберите корректные даты (выезд позже или равен въезду)
+              {t.selectValidDatesHint}
             </p>
           )}
         </div>

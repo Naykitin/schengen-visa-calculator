@@ -8,12 +8,15 @@ import {
   UploadCloud,
 } from 'lucide-react'
 import type { Trip } from '../lib/schengen'
+import type { Language, TranslationDictionary } from '../lib/i18n'
 import { getTripDuration } from '../lib/schengen'
 import { format, parseISO } from 'date-fns'
-import { ru } from 'date-fns/locale'
+import { ru, enUS } from 'date-fns/locale'
 
 interface TripListProps {
   trips: Trip[]
+  lang: Language
+  t: TranslationDictionary
   onAddTrip: () => void
   onEditTrip: (trip: Trip) => void
   onDeleteTrip: (tripId: string) => void
@@ -22,11 +25,14 @@ interface TripListProps {
 
 export const TripList: React.FC<TripListProps> = ({
   trips,
+  lang,
+  t,
   onAddTrip,
   onEditTrip,
   onDeleteTrip,
   onLoadSampleData,
 }) => {
+  const dateLocale = lang === 'ru' ? ru : enUS
   // Sort trips descending by entryDate
   const sortedTrips = [...trips].sort((a, b) => b.entryDate.localeCompare(a.entryDate))
 
@@ -36,25 +42,25 @@ export const TripList: React.FC<TripListProps> = ({
         <div className="w-14 h-14 mx-auto rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-4 shadow-inner">
           <Plane className="w-7 h-7" />
         </div>
-        <h3 className="text-base font-bold text-white mb-1">Пока нет добавленных поездок</h3>
+        <h3 className="text-base font-bold text-white mb-1">{t.noTripsTitle}</h3>
         <p className="text-xs text-slate-400 max-w-sm mx-auto mb-6">
-          Добавьте ваши прошлые поездки в страны Шенгенской зоны или запланируйте будущие, чтобы рассчитать доступные дни.
+          {t.noTripsDesc}
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
           <button
             onClick={onAddTrip}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-lg shadow-blue-600/30 active:scale-95 transition-all"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-lg shadow-blue-600/30 active:scale-95 transition-all min-h-[44px]"
           >
             <Plus className="w-4 h-4" />
-            Добавить первую поездку
+            {t.addFirstTrip}
           </button>
           <button
             onClick={onLoadSampleData}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium px-4 py-2.5 rounded-xl border border-slate-700 transition-all active:scale-95"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium px-4 py-2.5 rounded-xl border border-slate-700 transition-all active:scale-95 min-h-[44px]"
           >
             <UploadCloud className="w-4 h-4" />
-            Загрузить примеры
+            {t.loadSamples}
           </button>
         </div>
       </div>
@@ -65,7 +71,7 @@ export const TripList: React.FC<TripListProps> = ({
     <div className="space-y-3">
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
-          <h2 className="text-sm font-bold text-slate-200">История и планы поездок</h2>
+          <h2 className="text-sm font-bold text-slate-200">{t.tripsHistoryTitle}</h2>
           <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700/60 font-semibold">
             {trips.length}
           </span>
@@ -73,18 +79,18 @@ export const TripList: React.FC<TripListProps> = ({
 
         <button
           onClick={onAddTrip}
-          className="text-xs text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1 active:scale-95 transition-all"
+          className="text-xs text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1 active:scale-95 transition-all py-1 px-2"
         >
           <Plus className="w-3.5 h-3.5" />
-          Добавить
+          {t.addTrip}
         </button>
       </div>
 
       <div className="space-y-2.5">
         {sortedTrips.map((trip) => {
           const duration = getTripDuration(trip.entryDate, trip.exitDate)
-          const formattedEntry = format(parseISO(trip.entryDate), 'd MMM yyyy', { locale: ru })
-          const formattedExit = format(parseISO(trip.exitDate), 'd MMM yyyy', { locale: ru })
+          const formattedEntry = format(parseISO(trip.entryDate), 'd MMM yyyy', { locale: dateLocale })
+          const formattedExit = format(parseISO(trip.exitDate), 'd MMM yyyy', { locale: dateLocale })
           const isSingleDay = trip.entryDate === trip.exitDate
 
           return (
@@ -111,11 +117,11 @@ export const TripList: React.FC<TripListProps> = ({
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <h4 className="text-sm font-bold text-slate-100">
-                        {trip.title || 'Поездка в Шенген'}
+                        {trip.title || (lang === 'ru' ? 'Поездка в Шенген' : 'Schengen Trip')}
                       </h4>
                       {trip.isPlanned && (
                         <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
-                          План
+                          {t.plannedBadge}
                         </span>
                       )}
                     </div>
@@ -137,21 +143,21 @@ export const TripList: React.FC<TripListProps> = ({
 
                 <div className="flex flex-col items-end shrink-0 gap-2">
                   <span className="text-xs font-bold text-slate-200 bg-slate-800/80 border border-slate-700/60 px-2.5 py-1 rounded-xl">
-                    {duration} {getDaysLabel(duration)}
+                    {t.durationDays(duration)}
                   </span>
 
                   <div className="flex items-center gap-1 opacity-90 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => onEditTrip(trip)}
-                      className="p-1.5 text-slate-400 hover:text-blue-400 rounded-lg hover:bg-slate-800 transition-colors"
-                      title="Редактировать"
+                      className="p-2 text-slate-400 hover:text-blue-400 rounded-lg hover:bg-slate-800 transition-colors"
+                      title={t.editTrip}
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => onDeleteTrip(trip.id)}
-                      className="p-1.5 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-slate-800 transition-colors"
-                      title="Удалить"
+                      className="p-2 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-slate-800 transition-colors"
+                      title={t.deleteTrip}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -164,13 +170,4 @@ export const TripList: React.FC<TripListProps> = ({
       </div>
     </div>
   )
-}
-
-function getDaysLabel(days: number): string {
-  const mod10 = days % 10
-  const mod100 = days % 100
-  if (mod100 >= 11 && mod100 <= 19) return 'дней'
-  if (mod10 === 1) return 'день'
-  if (mod10 >= 2 && mod10 <= 4) return 'дня'
-  return 'дней'
 }
