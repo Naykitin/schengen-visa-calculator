@@ -13,6 +13,7 @@ import { PlannerView } from './components/PlannerView'
 import { CalendarView } from './components/CalendarView'
 import { InfoModal } from './components/InfoModal'
 import { BackupModal } from './components/BackupModal'
+import { ProfileModal } from './components/ProfileModal'
 import type { Trip } from './lib/schengen'
 import type { Language } from './lib/i18n'
 import { translations } from './lib/i18n'
@@ -20,18 +21,35 @@ import {
   calculateSchengenSummary,
   toDateString,
 } from './lib/schengen'
+import type { AppStorageData } from './lib/storage'
 import {
-  loadTrips,
+  loadAppStorage,
   requestPersistentStorage,
-  saveTrips,
+  saveAppStorage,
 } from './lib/storage'
+import { triggerHaptic } from './lib/haptics'
+import { useNetworkStatus } from './lib/useNetworkStatus'
+import { useServiceWorker } from './lib/useServiceWorker'
 import { subDays } from 'date-fns'
 
+const INITIAL_STORAGE: AppStorageData = {
+  version: '2.0',
+  activeProfileId: 'default_profile',
+  profiles: [
+    {
+      id: 'default_profile',
+      name: 'My Passport',
+      color: 'blue',
+      trips: [],
+    },
+  ],
+}
+
 export function App() {
-  const [trips, setTrips] = useState<Trip[]>([])
+  const [appData, setAppData] = useState<AppStorageData>(INITIAL_STORAGE)
   const [isLoaded, setIsLoaded] = useState(false)
   
-  // Internationalization: default to English with browser detection
+  // Internationalization: default to English with browser language detection
   const [lang, setLang] = useState<Language>(() => {
     if (typeof window !== 'undefined' && navigator.language?.toLowerCase().startsWith('ru')) {
       return 'ru'
@@ -40,6 +58,10 @@ export function App() {
   })
 
   const t = translations[lang]
+
+  // Network and Service Worker hooks
+  const isOnline = useNetworkStatus()
+  const { hasUpdate, reloadApp } = useServiceWorker()
 
   // Navigation tabs (Mobile / Tablet active tab)
   const [activeTab, setActiveTab] = useState<'trips' | 'planner' | 'calendar'>('trips')
@@ -56,24 +78,30 @@ export function App() {
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null)
   const [isBackupModalOpen, setIsBackupModalOpen] = useState(false)
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false)
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
 
   // Initialize storage & auto-request persistence
   useEffect(() => {
     async function init() {
-      const storedTrips = await loadTrips()
-      setTrips(storedTrips)
+      const storedData = await loadAppStorage(t.myPassport)
+      setAppData(storedData)
       setIsLoaded(true)
       requestPersistentStorage().catch(() => {})
     }
     init()
   }, [])
 
-  // Auto-save whenever trips change
+  // Auto-save whenever appData changes
   useEffect(() => {
     if (isLoaded) {
-      saveTrips(trips)
+      saveAppStorage(appData)
     }
-  }, [trips, isLoaded])
+  }, [appData, isLoaded])
+
+  // Get active profile and its trips
+  const activeProfile =
+    appData.profiles.find((p) => p.id === appData.activeProfileId) || appData.profiles[0]
+  const currentTrips = activeProfile ? activeProfile.trips : []
 
   // Desktop keyboard shortcuts: 'N' for new trip, '1'/'2'/'3' for tabs
   useEffect(() => {
@@ -84,7 +112,8 @@ export function App() {
         document.activeElement?.tagName === 'TEXTAREA' ||
         isTripModalOpen ||
         isBackupModalOpen ||
-        isInfoModalOpen
+        isInfoModalOpen ||
+        isProfileModalOpen
       ) {
         return
       }
@@ -105,40 +134,99 @@ export function App() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isTripModalOpen, isBackupModalOpen, isInfoModalOpen])
+  }, [isTripModalOpen, isBackupModalOpen, isInfoModalOpen, isProfileModalOpen])
 
-  // Calculate live summary
-  const summary = calculateSchengenSummary(trips, referenceDate)
+  // Calculate live summary for current active profile trips
+  const summary = calculateSchengenSummary(currentTrips, referenceDate)
 
-  // Handlers
+  // Trigger warning haptic if an overstay is detected
+  useEffect(() => {
+    if (summary.hasOverstay) {
+      triggerHaptic('warning')
+    }
+  }, [summary.hasOverstay])
+
+  // Language Toggle
   const handleToggleLanguage = () => {
     setLang((prev) => (prev === 'en' ? 'ru' : 'en'))
+    triggerHaptic('light')
+  }
+
+  // Profile operations
+  const handleSelectProfile = (profileId: string) => {
+    setAppData((prev) => ({ ...prev, activeProfileId: profileId }))
+  }
+
+  const handleAddProfile = (name: string, color: string) => {
+    const newProfile = {
+      id: `profile_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      name,
+      color,
+      trips: [],
+    }
+    setAppData((prev) => ({
+      ...prev,
+      activeProfileId: newProfile.id,
+      profiles: [...prev.profiles, newProfile],
+    }))
+  }
+
+  const handleDeleteProfile = (profileId: string) => {
+    setAppData((prev) => {
+      if (prev.profiles.length <= 1) return prev
+      const remainingProfiles = prev.profiles.filter((p) => p.id !== profileId)
+      const newActiveId =
+        prev.activeProfileId === profileId ? remainingProfiles[0].id : prev.activeProfileId
+      return {
+        ...prev,
+        activeProfileId: newActiveId,
+        profiles: remainingProfiles,
+      }
+    })
+  }
+
+  // Trip operations on active profile
+  const updateCurrentProfileTrips = (updater: (trips: Trip[]) => Trip[]) => {
+    setAppData((prev) => {
+      const updatedProfiles = prev.profiles.map((p) => {
+        if (p.id === prev.activeProfileId) {
+          return { ...p, trips: updater(p.trips) }
+        }
+        return p
+      })
+      return { ...prev, profiles: updatedProfiles }
+    })
   }
 
   const handleSaveTrip = (trip: Trip) => {
+    triggerHaptic('medium')
     if (editingTrip) {
-      setTrips((prev) => prev.map((t) => (t.id === trip.id ? trip : t)))
+      updateCurrentProfileTrips((trips) => trips.map((t) => (t.id === trip.id ? trip : t)))
     } else {
-      setTrips((prev) => [...prev, trip])
+      updateCurrentProfileTrips((trips) => [...trips, trip])
     }
     setEditingTrip(null)
   }
 
   const handleDeleteTrip = (tripId: string) => {
-    setTrips((prev) => prev.filter((t) => t.id !== tripId))
+    triggerHaptic('medium')
+    updateCurrentProfileTrips((trips) => trips.filter((t) => t.id !== tripId))
   }
 
   const handleEditTrip = (trip: Trip) => {
+    triggerHaptic('light')
     setEditingTrip(trip)
     setIsTripModalOpen(true)
   }
 
   const handleAddTrip = () => {
+    triggerHaptic('light')
     setEditingTrip(null)
     setIsTripModalOpen(true)
   }
 
   const handleAddPlannedTrip = (entryDate: string, exitDate: string, title: string) => {
+    triggerHaptic('medium')
     const newTrip: Trip = {
       id: `trip_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       entryDate,
@@ -146,11 +234,12 @@ export function App() {
       title,
       isPlanned: true,
     }
-    setTrips((prev) => [...prev, newTrip])
+    updateCurrentProfileTrips((trips) => [...trips, newTrip])
     setActiveTab('trips')
   }
 
   const handleLoadSampleData = () => {
+    triggerHaptic('medium')
     const today = new Date()
     const trip1End = subDays(today, 80)
     const trip1Start = subDays(trip1End, 14)
@@ -177,11 +266,12 @@ export function App() {
       },
     ]
 
-    setTrips(sampleTrips)
+    updateCurrentProfileTrips(() => sampleTrips)
   }
 
   const handleClearAll = () => {
-    setTrips([])
+    triggerHaptic('error')
+    updateCurrentProfileTrips(() => [])
   }
 
   return (
@@ -190,6 +280,11 @@ export function App() {
       <Header
         lang={lang}
         t={t}
+        activeProfile={activeProfile}
+        isOnline={isOnline}
+        hasUpdate={hasUpdate}
+        onReloadApp={reloadApp}
+        onOpenProfileModal={() => setIsProfileModalOpen(true)}
         onToggleLanguage={handleToggleLanguage}
         onOpenAddModal={handleAddTrip}
         onOpenBackupModal={() => setIsBackupModalOpen(true)}
@@ -215,7 +310,7 @@ export function App() {
             />
 
             <TripList
-              trips={trips}
+              trips={currentTrips}
               lang={lang}
               t={t}
               onAddTrip={handleAddTrip}
@@ -230,7 +325,10 @@ export function App() {
             {/* Desktop side panel tab switcher */}
             <div className="grid grid-cols-2 p-1 bg-slate-900/90 border border-slate-800 rounded-2xl">
               <button
-                onClick={() => setDesktopSideTab('planner')}
+                onClick={() => {
+                  setDesktopSideTab('planner')
+                  triggerHaptic('light')
+                }}
                 className={`flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold rounded-xl transition-all ${
                   desktopSideTab === 'planner'
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
@@ -242,7 +340,10 @@ export function App() {
               </button>
 
               <button
-                onClick={() => setDesktopSideTab('calendar')}
+                onClick={() => {
+                  setDesktopSideTab('calendar')
+                  triggerHaptic('light')
+                }}
                 className={`flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold rounded-xl transition-all ${
                   desktopSideTab === 'calendar'
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
@@ -257,14 +358,14 @@ export function App() {
             <div className="animate-fade-in">
               {desktopSideTab === 'planner' ? (
                 <PlannerView
-                  trips={trips}
+                  trips={currentTrips}
                   lang={lang}
                   t={t}
                   onAddPlannedTrip={handleAddPlannedTrip}
                 />
               ) : (
                 <CalendarView
-                  trips={trips}
+                  trips={currentTrips}
                   selectedDate={referenceDate}
                   lang={lang}
                   t={t}
@@ -297,7 +398,10 @@ export function App() {
           {/* Tablet & Mobile Tab Switcher */}
           <div className="grid grid-cols-3 p-1 bg-slate-900 border border-slate-800 rounded-2xl">
             <button
-              onClick={() => setActiveTab('trips')}
+              onClick={() => {
+                setActiveTab('trips')
+                triggerHaptic('light')
+              }}
               className={`flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs font-semibold rounded-xl transition-all min-h-[44px] ${
                 activeTab === 'trips'
                   ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
@@ -309,7 +413,10 @@ export function App() {
             </button>
 
             <button
-              onClick={() => setActiveTab('planner')}
+              onClick={() => {
+                setActiveTab('planner')
+                triggerHaptic('light')
+              }}
               className={`flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs font-semibold rounded-xl transition-all min-h-[44px] ${
                 activeTab === 'planner'
                   ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
@@ -321,7 +428,10 @@ export function App() {
             </button>
 
             <button
-              onClick={() => setActiveTab('calendar')}
+              onClick={() => {
+                setActiveTab('calendar')
+                triggerHaptic('light')
+              }}
               className={`flex items-center justify-center gap-1.5 py-2.5 px-2 text-xs font-semibold rounded-xl transition-all min-h-[44px] ${
                 activeTab === 'calendar'
                   ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
@@ -337,7 +447,7 @@ export function App() {
           <div className="animate-fade-in">
             {activeTab === 'trips' && (
               <TripList
-                trips={trips}
+                trips={currentTrips}
                 lang={lang}
                 t={t}
                 onAddTrip={handleAddTrip}
@@ -349,7 +459,7 @@ export function App() {
 
             {activeTab === 'planner' && (
               <PlannerView
-                trips={trips}
+                trips={currentTrips}
                 lang={lang}
                 t={t}
                 onAddPlannedTrip={handleAddPlannedTrip}
@@ -358,7 +468,7 @@ export function App() {
 
             {activeTab === 'calendar' && (
               <CalendarView
-                trips={trips}
+                trips={currentTrips}
                 selectedDate={referenceDate}
                 lang={lang}
                 t={t}
@@ -386,7 +496,7 @@ export function App() {
       <TripModal
         isOpen={isTripModalOpen}
         initialTrip={editingTrip}
-        existingTrips={trips}
+        existingTrips={currentTrips}
         lang={lang}
         t={t}
         onClose={() => {
@@ -398,11 +508,21 @@ export function App() {
 
       <BackupModal
         isOpen={isBackupModalOpen}
-        trips={trips}
+        data={appData}
         t={t}
         onClose={() => setIsBackupModalOpen(false)}
-        onImportTrips={(importedTrips) => setTrips(importedTrips)}
+        onImportData={(updatedData) => setAppData(updatedData)}
         onClearAll={handleClearAll}
+      />
+
+      <ProfileModal
+        isOpen={isProfileModalOpen}
+        data={appData}
+        t={t}
+        onClose={() => setIsProfileModalOpen(false)}
+        onSelectProfile={handleSelectProfile}
+        onAddProfile={handleAddProfile}
+        onDeleteProfile={handleDeleteProfile}
       />
 
       <InfoModal

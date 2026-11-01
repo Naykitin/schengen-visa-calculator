@@ -9,6 +9,21 @@ export interface TranslationDictionary {
   addTrip: string
   trip: string
 
+  // Offline & Updates
+  offlineBadge: string
+  onlineBadge: string
+  updateAvailableTitle: string
+  updateNowBtn: string
+
+  // Profiles
+  profilesTitle: string
+  addProfile: string
+  profileNamePlaceholder: string
+  deleteProfile: string
+  cannotDeleteOnlyProfile: string
+  myPassport: string
+  activeProfileLabel: string
+
   // Status Card
   referenceDate: string
   resetToday: string
@@ -138,6 +153,19 @@ export const translations: Record<Language, TranslationDictionary> = {
     addTrip: 'Add Trip',
     trip: 'Trip',
 
+    offlineBadge: 'Offline mode',
+    onlineBadge: 'Online',
+    updateAvailableTitle: 'New version available',
+    updateNowBtn: 'Update',
+
+    profilesTitle: 'Profiles & Passports',
+    addProfile: 'Add Profile',
+    profileNamePlaceholder: 'e.g. Partner, Child, 2nd Passport',
+    deleteProfile: 'Delete Profile',
+    cannotDeleteOnlyProfile: 'Cannot delete the only profile',
+    myPassport: 'My Passport',
+    activeProfileLabel: 'Active profile:',
+
     referenceDate: 'Reference Date:',
     resetToday: 'Reset to today',
     overstayWarningTitle: 'Overstay detected!',
@@ -264,6 +292,19 @@ export const translations: Record<Language, TranslationDictionary> = {
     aboutRule: 'Как работает правило 90/180',
     addTrip: 'Добавить поездку',
     trip: 'Поездка',
+
+    offlineBadge: 'Офлайн режим',
+    onlineBadge: 'Онлайн',
+    updateAvailableTitle: 'Доступна новая версия',
+    updateNowBtn: 'Обновить',
+
+    profilesTitle: 'Профили и паспорта',
+    addProfile: 'Добавить профиль',
+    profileNamePlaceholder: 'Например: Супруг(а), Ребенок, Второй паспорт',
+    deleteProfile: 'Удалить профиль',
+    cannotDeleteOnlyProfile: 'Нельзя удалить единственный профиль',
+    myPassport: 'Мой паспорт',
+    activeProfileLabel: 'Активный профиль:',
 
     referenceDate: 'Контрольная дата:',
     resetToday: 'Вернуть сегодня',

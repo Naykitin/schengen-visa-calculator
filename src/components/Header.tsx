@@ -1,10 +1,17 @@
 import React from 'react'
-import { Download, Globe, HelpCircle, Plus } from 'lucide-react'
+import { Download, Globe, HelpCircle, Plus, RefreshCw, User, WifiOff } from 'lucide-react'
 import type { Language, TranslationDictionary } from '../lib/i18n'
+import type { Profile } from '../lib/storage'
+import { PROFILE_COLORS } from '../lib/storage'
 
 interface HeaderProps {
   lang: Language
   t: TranslationDictionary
+  activeProfile: Profile
+  isOnline: boolean
+  hasUpdate: boolean
+  onReloadApp: () => void
+  onOpenProfileModal: () => void
   onToggleLanguage: () => void
   onOpenAddModal: () => void
   onOpenBackupModal: () => void
@@ -14,19 +21,28 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   lang,
   t,
+  activeProfile,
+  isOnline,
+  hasUpdate,
+  onReloadApp,
+  onOpenProfileModal,
   onToggleLanguage,
   onOpenAddModal,
   onOpenBackupModal,
   onOpenInfoModal,
 }) => {
+  const profileColor = PROFILE_COLORS.find((c) => c.id === activeProfile.color) || PROFILE_COLORS[0]
+
   return (
-    <header className="sticky top-0 z-30 bg-slate-950/85 backdrop-blur-md border-b border-slate-800 safe-top px-4 py-2.5 transition-all">
-      <div className="max-w-6xl mx-auto flex items-center justify-between">
-        <div className="flex items-center gap-3">
+    <header className="sticky top-0 z-30 bg-slate-950/85 backdrop-blur-md border-b border-slate-800 safe-top px-3 sm:px-4 py-2.5 transition-all">
+      <div className="max-w-6xl mx-auto flex items-center justify-between gap-2">
+        {/* Left: Logo & Title & Profile Switcher */}
+        <div className="flex items-center gap-2.5 sm:gap-3">
           <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-700 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20 border border-blue-400/30 shrink-0">
             <span className="text-amber-300 font-black text-sm tracking-tighter">90</span>
           </div>
-          <div>
+
+          <div className="hidden sm:block">
             <h1 className="text-base sm:text-lg font-bold text-white tracking-tight flex items-center gap-1.5">
               {t.appTitle}
               <span className="text-[10px] uppercase font-semibold px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
@@ -35,13 +51,45 @@ export const Header: React.FC<HeaderProps> = ({
             </h1>
             <p className="text-[11px] text-slate-400 leading-none">{t.appSubtitle}</p>
           </div>
+
+          {/* Profile Switcher Pill */}
+          <button
+            onClick={onOpenProfileModal}
+            className="flex items-center gap-2 py-1 px-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs text-slate-200 transition-all active:scale-95 min-h-[36px]"
+            title={t.profilesTitle}
+          >
+            <span className={`w-2.5 h-2.5 rounded-full ${profileColor.bg} inline-block`} />
+            <span className="font-semibold max-w-[100px] truncate">{activeProfile.name}</span>
+            <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+          </button>
         </div>
 
+        {/* Center: Offline indicator & New version update banner */}
+        <div className="flex items-center gap-2">
+          {!isOnline && (
+            <div className="flex items-center gap-1 text-[11px] font-semibold text-amber-300 bg-amber-500/15 border border-amber-500/30 px-2 py-1 rounded-xl">
+              <WifiOff className="w-3.5 h-3.5" />
+              <span className="hidden xs:inline">{t.offlineBadge}</span>
+            </div>
+          )}
+
+          {hasUpdate && (
+            <button
+              onClick={onReloadApp}
+              className="flex items-center gap-1.5 text-xs font-bold text-emerald-300 bg-emerald-500/20 border border-emerald-500/40 px-2.5 py-1 rounded-xl animate-pulse hover:bg-emerald-500/30 transition-all"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>{t.updateNowBtn}</span>
+            </button>
+          )}
+        </div>
+
+        {/* Right: Actions */}
         <div className="flex items-center gap-1.5 sm:gap-2">
-          {/* Language Switcher button */}
+          {/* Language Switcher */}
           <button
             onClick={onToggleLanguage}
-            className="min-w-[40px] min-h-[40px] px-2 flex items-center justify-center gap-1 text-xs font-bold text-slate-300 hover:text-white rounded-xl hover:bg-slate-800/70 border border-slate-800 active:scale-95 transition-all"
+            className="min-w-[36px] sm:min-w-[40px] min-h-[36px] sm:min-h-[40px] px-2 flex items-center justify-center gap-1 text-xs font-bold text-slate-300 hover:text-white rounded-xl hover:bg-slate-800/70 border border-slate-800 active:scale-95 transition-all"
             title="Switch Language / Сменить язык"
             aria-label="Switch Language"
           >
@@ -51,7 +99,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           <button
             onClick={onOpenBackupModal}
-            className="min-w-[40px] min-h-[40px] flex items-center justify-center text-slate-400 hover:text-white rounded-xl hover:bg-slate-800/60 active:scale-95 transition-all"
+            className="min-w-[36px] sm:min-w-[40px] min-h-[36px] sm:min-h-[40px] flex items-center justify-center text-slate-400 hover:text-white rounded-xl hover:bg-slate-800/60 active:scale-95 transition-all"
             title={t.backupAndExport}
             aria-label={t.backupAndExport}
           >
@@ -60,7 +108,7 @@ export const Header: React.FC<HeaderProps> = ({
           
           <button
             onClick={onOpenInfoModal}
-            className="min-w-[40px] min-h-[40px] flex items-center justify-center text-slate-400 hover:text-white rounded-xl hover:bg-slate-800/60 active:scale-95 transition-all"
+            className="min-w-[36px] sm:min-w-[40px] min-h-[36px] sm:min-h-[40px] flex items-center justify-center text-slate-400 hover:text-white rounded-xl hover:bg-slate-800/60 active:scale-95 transition-all"
             title={t.aboutRule}
             aria-label={t.aboutRule}
           >
@@ -69,7 +117,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           <button
             onClick={onOpenAddModal}
-            className="min-h-[40px] flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-3.5 py-2 rounded-xl shadow-md shadow-blue-600/30 active:scale-95 transition-all border border-blue-400/20"
+            className="min-h-[36px] sm:min-h-[40px] flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-3 sm:px-3.5 py-2 rounded-xl shadow-md shadow-blue-600/30 active:scale-95 transition-all border border-blue-400/20"
           >
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">{t.addTrip}</span>

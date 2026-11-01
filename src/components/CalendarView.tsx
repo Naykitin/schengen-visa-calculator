@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import {
   ChevronLeft,
   ChevronRight,
@@ -19,6 +19,7 @@ import {
 import { ru, enUS } from 'date-fns/locale'
 import type { Trip } from '../lib/schengen'
 import type { Language, TranslationDictionary } from '../lib/i18n'
+import { triggerHaptic } from '../lib/haptics'
 import {
   buildSchengenDaysMap,
   countDaysIn180Window,
@@ -44,6 +45,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     selectedDate ? parseISO(selectedDate) : new Date()
   )
 
+  const touchStartX = useRef<number | null>(null)
+
   const dateLocale = lang === 'ru' ? ru : enUS
   const daysMap = buildSchengenDaysMap(trips)
 
@@ -58,6 +61,29 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     ? ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
     : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
+  // Swipe gesture for mobile month navigation
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return
+    const diffX = e.changedTouches[0].clientX - touchStartX.current
+    touchStartX.current = null
+
+    if (Math.abs(diffX) > 45) {
+      if (diffX > 0) {
+        // Swiped right -> Previous month
+        setCurrentMonth((prev) => subMonths(prev, 1))
+        triggerHaptic('light')
+      } else {
+        // Swiped left -> Next month
+        setCurrentMonth((prev) => addMonths(prev, 1))
+        triggerHaptic('light')
+      }
+    }
+  }
+
   // Information about currently selected day
   const selectedDateStr = selectedDate
   const isSelectedInSchengen = daysMap.has(selectedDateStr)
@@ -66,7 +92,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   const selectedTrip = selectedTripId ? trips.find(t => t.id === selectedTripId) : null
 
   return (
-    <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-5 shadow-xl space-y-4 backdrop-blur-sm">
+    <div
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      className="bg-slate-900/80 border border-slate-800 rounded-3xl p-5 shadow-xl space-y-4 backdrop-blur-sm select-none"
+    >
       {/* Month Navigation */}
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-bold text-white capitalize">
@@ -75,20 +105,29 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
         <div className="flex items-center gap-1">
           <button
-            onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+            onClick={() => {
+              setCurrentMonth(subMonths(currentMonth, 1))
+              triggerHaptic('light')
+            }}
             className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
             title="Previous Month"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
           <button
-            onClick={() => setCurrentMonth(new Date())}
+            onClick={() => {
+              setCurrentMonth(new Date())
+              triggerHaptic('light')
+            }}
             className="text-[11px] font-semibold text-blue-400 hover:text-blue-300 px-2.5 py-1 rounded-lg hover:bg-slate-800"
           >
             {t.todayBtn}
           </button>
           <button
-            onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+            onClick={() => {
+              setCurrentMonth(addMonths(currentMonth, 1))
+              triggerHaptic('light')
+            }}
             className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
             title="Next Month"
           >
@@ -141,7 +180,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           return (
             <button
               key={dateStr}
-              onClick={() => onSelectDate(dateStr)}
+              onClick={() => {
+                onSelectDate(dateStr)
+                triggerHaptic('light')
+              }}
               className={`h-11 rounded-xl flex flex-col items-center justify-center relative transition-all text-xs ${dayStyle} ${
                 isSelected ? 'ring-2 ring-blue-400 ring-offset-2 ring-offset-slate-900 z-10' : ''
               } ${badgeStyle}`}
