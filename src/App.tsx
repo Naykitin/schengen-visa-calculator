@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useState, useRef, useCallback, lazy, Suspense } from 'react'
 import {
   CalendarDays,
   Compass,
@@ -8,13 +8,8 @@ import {
 import { Header } from './components/Header'
 import { StatusCard } from './components/StatusCard'
 import { TripList } from './components/TripList'
-import { TripModal } from './components/TripModal'
 import { PlannerView } from './components/PlannerView'
 import { CalendarView } from './components/CalendarView'
-import { InfoModal } from './components/InfoModal'
-import { BackupModal } from './components/BackupModal'
-import { ProfileModal } from './components/ProfileModal'
-import { SyncModal } from './components/SyncModal'
 import type { Trip } from './lib/schengen'
 import type { Language } from './lib/i18n'
 import { translations } from './lib/i18n'
@@ -40,6 +35,13 @@ import {
   saveSyncPreferences,
 } from './lib/sync'
 import { subDays } from 'date-fns'
+
+// Lazy-loaded modal components for maximum initial load performance (Core Web Vitals)
+const TripModal = lazy(() => import('./components/TripModal').then((m) => ({ default: m.TripModal })))
+const BackupModal = lazy(() => import('./components/BackupModal').then((m) => ({ default: m.BackupModal })))
+const ProfileModal = lazy(() => import('./components/ProfileModal').then((m) => ({ default: m.ProfileModal })))
+const SyncModal = lazy(() => import('./components/SyncModal').then((m) => ({ default: m.SyncModal })))
+const InfoModal = lazy(() => import('./components/InfoModal').then((m) => ({ default: m.InfoModal })))
 
 const INITIAL_STORAGE: AppStorageData = {
   version: '2.0',
@@ -612,60 +614,74 @@ export function App() {
         </button>
       </div>
 
-      {/* Modals */}
-      <TripModal
-        isOpen={isTripModalOpen}
-        initialTrip={editingTrip}
-        existingTrips={currentTrips}
-        lang={lang}
-        t={t}
-        onClose={() => {
-          setIsTripModalOpen(false)
-          setEditingTrip(null)
-        }}
-        onSave={handleSaveTrip}
-      />
+      {/* =========================================================================
+          LAZY-LOADED MODALS (Loaded on-demand to optimize bundle size & LCP)
+         ========================================================================= */}
+      <Suspense fallback={null}>
+        {isTripModalOpen && (
+          <TripModal
+            isOpen={isTripModalOpen}
+            initialTrip={editingTrip}
+            existingTrips={currentTrips}
+            lang={lang}
+            t={t}
+            onClose={() => {
+              setIsTripModalOpen(false)
+              setEditingTrip(null)
+            }}
+            onSave={handleSaveTrip}
+          />
+        )}
 
-      <BackupModal
-        isOpen={isBackupModalOpen}
-        data={appData}
-        t={t}
-        onClose={() => setIsBackupModalOpen(false)}
-        onImportData={(updatedData) => setAppData(updatedData)}
-        onClearAll={handleClearAll}
-      />
+        {isBackupModalOpen && (
+          <BackupModal
+            isOpen={isBackupModalOpen}
+            data={appData}
+            t={t}
+            onClose={() => setIsBackupModalOpen(false)}
+            onImportData={(updatedData) => setAppData(updatedData)}
+            onClearAll={handleClearAll}
+          />
+        )}
 
-      <ProfileModal
-        isOpen={isProfileModalOpen}
-        data={appData}
-        t={t}
-        onClose={() => setIsProfileModalOpen(false)}
-        onSelectProfile={handleSelectProfile}
-        onAddProfile={handleAddProfile}
-        onDeleteProfile={handleDeleteProfile}
-      />
+        {isProfileModalOpen && (
+          <ProfileModal
+            isOpen={isProfileModalOpen}
+            data={appData}
+            t={t}
+            onClose={() => setIsProfileModalOpen(false)}
+            onSelectProfile={handleSelectProfile}
+            onAddProfile={handleAddProfile}
+            onDeleteProfile={handleDeleteProfile}
+          />
+        )}
 
-      <SyncModal
-        isOpen={isSyncModalOpen}
-        syncKey={syncKey}
-        autoSync={autoSync}
-        lastSyncTime={lastSyncTime}
-        isSyncing={isSyncing}
-        syncError={syncError}
-        t={t}
-        onClose={() => setIsSyncModalOpen(false)}
-        onEnableNewSyncKey={handleEnableNewSyncKey}
-        onConnectSyncKey={handleConnectSyncKey}
-        onToggleAutoSync={handleToggleAutoSync}
-        onManualSync={handleManualSync}
-        onDisconnectSync={handleDisconnectSync}
-      />
+        {isSyncModalOpen && (
+          <SyncModal
+            isOpen={isSyncModalOpen}
+            syncKey={syncKey}
+            autoSync={autoSync}
+            lastSyncTime={lastSyncTime}
+            isSyncing={isSyncing}
+            syncError={syncError}
+            t={t}
+            onClose={() => setIsSyncModalOpen(false)}
+            onEnableNewSyncKey={handleEnableNewSyncKey}
+            onConnectSyncKey={handleConnectSyncKey}
+            onToggleAutoSync={handleToggleAutoSync}
+            onManualSync={handleManualSync}
+            onDisconnectSync={handleDisconnectSync}
+          />
+        )}
 
-      <InfoModal
-        isOpen={isInfoModalOpen}
-        t={t}
-        onClose={() => setIsInfoModalOpen(false)}
-      />
+        {isInfoModalOpen && (
+          <InfoModal
+            isOpen={isInfoModalOpen}
+            t={t}
+            onClose={() => setIsInfoModalOpen(false)}
+          />
+        )}
+      </Suspense>
     </div>
   )
 }
