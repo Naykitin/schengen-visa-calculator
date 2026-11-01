@@ -1,5 +1,5 @@
 import React from 'react'
-import { Download, Globe, HelpCircle, Plus, RefreshCw, User, WifiOff } from 'lucide-react'
+import { Cloud, Download, Globe, HelpCircle, Plus, RefreshCw, User, WifiOff } from 'lucide-react'
 import type { Language, TranslationDictionary } from '../lib/i18n'
 import type { Profile } from '../lib/storage'
 import { PROFILE_COLORS } from '../lib/storage'
@@ -10,8 +10,10 @@ interface HeaderProps {
   activeProfile: Profile
   isOnline: boolean
   hasUpdate: boolean
+  isSyncActive: boolean
   onReloadApp: () => void
   onOpenProfileModal: () => void
+  onOpenSyncModal: () => void
   onToggleLanguage: () => void
   onOpenAddModal: () => void
   onOpenBackupModal: () => void
@@ -24,8 +26,10 @@ export const Header: React.FC<HeaderProps> = ({
   activeProfile,
   isOnline,
   hasUpdate,
+  isSyncActive,
   onReloadApp,
   onOpenProfileModal,
+  onOpenSyncModal,
   onToggleLanguage,
   onOpenAddModal,
   onOpenBackupModal,
@@ -85,7 +89,22 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
+          {/* Cloudflare Sync Button */}
+          <button
+            onClick={onOpenSyncModal}
+            className={`min-w-[36px] sm:min-w-[40px] min-h-[36px] sm:min-h-[40px] flex items-center justify-center rounded-xl hover:bg-slate-800/60 active:scale-95 transition-all relative ${
+              isSyncActive ? 'text-indigo-400' : 'text-slate-400 hover:text-white'
+            }`}
+            title={t.syncModalTitle}
+            aria-label={t.syncModalTitle}
+          >
+            <Cloud className="w-5 h-5" />
+            {isSyncActive && (
+              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-slate-950" />
+            )}
+          </button>
+
           {/* Language Switcher */}
           <button
             onClick={onToggleLanguage}
