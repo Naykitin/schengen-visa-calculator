@@ -9,35 +9,38 @@ import {
   Upload,
   X,
 } from 'lucide-react'
-import type { Trip } from '../lib/schengen'
+import type { AppStorageData } from '../lib/storage'
 import type { TranslationDictionary } from '../lib/i18n'
 import {
-  exportTripsToJson,
-  parseTripsJson,
+  exportAllDataToJson,
+  parseBackupJson,
   requestPersistentStorage,
 } from '../lib/storage'
+import { triggerHaptic } from '../lib/haptics'
 
 interface BackupModalProps {
   isOpen: boolean
-  trips: Trip[]
+  data: AppStorageData
   t: TranslationDictionary
   onClose: () => void
-  onImportTrips: (trips: Trip[]) => void
+  onImportData: (data: AppStorageData) => void
   onClearAll: () => void
 }
 
 export const BackupModal: React.FC<BackupModalProps> = ({
   isOpen,
-  trips,
+  data,
   t,
   onClose,
-  onImportTrips,
+  onImportData,
   onClearAll,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [importStatus, setImportStatus] = useState<string | null>(null)
   const [isPersisted, setIsPersisted] = useState<boolean | null>(null)
   const [confirmClear, setConfirmClear] = useState<boolean>(false)
+
+  const totalTripsCount = data.profiles.reduce((acc, p) => acc + p.trips.length, 0)
 
   useEffect(() => {
     if (isOpen && typeof navigator !== 'undefined' && navigator.storage?.persisted) {
@@ -59,7 +62,8 @@ export const BackupModal: React.FC<BackupModalProps> = ({
   if (!isOpen) return null
 
   const handleExport = () => {
-    exportTripsToJson(trips)
+    exportAllDataToJson(data)
+    triggerHaptic('medium')
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,11 +74,13 @@ export const BackupModal: React.FC<BackupModalProps> = ({
     reader.onload = (event) => {
       try {
         const text = event.target?.result as string
-        const parsed = parseTripsJson(text)
-        onImportTrips(parsed)
-        setImportStatus(t.importSuccess(parsed.length))
+        const updatedData = parseBackupJson(text, data)
+        onImportData(updatedData)
+        triggerHaptic('medium')
+        setImportStatus(t.importSuccess(updatedData.profiles.reduce((acc, p) => acc + p.trips.length, 0)))
         setTimeout(() => setImportStatus(null), 3000)
       } catch (err: any) {
+        triggerHaptic('error')
         setImportStatus(t.importError(err.message || 'Invalid JSON file'))
       }
     }
@@ -85,6 +91,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
   const handleRequestPersistence = async () => {
     const granted = await requestPersistentStorage()
     setIsPersisted(granted)
+    triggerHaptic('light')
   }
 
   return (
@@ -143,12 +150,17 @@ export const BackupModal: React.FC<BackupModalProps> = ({
 
           {/* Export & Import */}
           <div className="space-y-2.5">
-            <h4 className="text-xs font-bold text-slate-300">{t.fileBackupSectionTitle}</h4>
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-bold text-slate-300">{t.fileBackupSectionTitle}</h4>
+              <span className="text-[11px] text-slate-500">
+                {data.profiles.length} profiles · {totalTripsCount} trips
+              </span>
+            </div>
 
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={handleExport}
-                disabled={trips.length === 0}
+                disabled={totalTripsCount === 0}
                 className="flex items-center justify-center gap-2 p-3 bg-slate-950/80 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 disabled:opacity-40 rounded-2xl text-xs font-semibold text-slate-200 transition-all min-h-[44px]"
               >
                 <Download className="w-4 h-4 text-blue-400" />
@@ -214,7 +226,7 @@ export const BackupModal: React.FC<BackupModalProps> = ({
             ) : (
               <button
                 onClick={() => setConfirmClear(true)}
-                disabled={trips.length === 0}
+                disabled={totalTripsCount === 0}
                 className="text-xs text-rose-400/80 hover:text-rose-300 disabled:opacity-40 flex items-center gap-1.5 transition-colors py-1"
               >
                 <Trash2 className="w-3.5 h-3.5" />
