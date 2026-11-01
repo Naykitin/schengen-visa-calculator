@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import {
   CalendarDays,
   Compass,
@@ -14,6 +14,7 @@ import { CalendarView } from './components/CalendarView'
 import { InfoModal } from './components/InfoModal'
 import { BackupModal } from './components/BackupModal'
 import { ProfileModal } from './components/ProfileModal'
+import { SyncModal } from './components/SyncModal'
 import type { Trip } from './lib/schengen'
 import type { Language } from './lib/i18n'
 import { translations } from './lib/i18n'
@@ -30,6 +31,14 @@ import {
 import { triggerHaptic } from './lib/haptics'
 import { useNetworkStatus } from './lib/useNetworkStatus'
 import { useServiceWorker } from './lib/useServiceWorker'
+import {
+  extractSyncKeyFromUrl,
+  fetchRemoteVault,
+  generateSyncKey,
+  loadSyncPreferences,
+  pushLocalVault,
+  saveSyncPreferences,
+} from './lib/sync'
 import { subDays } from 'date-fns'
 
 const INITIAL_STORAGE: AppStorageData = {
@@ -63,6 +72,14 @@ export function App() {
   const isOnline = useNetworkStatus()
   const { hasUpdate, reloadApp } = useServiceWorker()
 
+  // Cloudflare Sync state
+  const [syncKey, setSyncKey] = useState<string | null>(null)
+  const [autoSync, setAutoSync] = useState<boolean>(true)
+  const [lastSyncTime, setLastSyncTime] = useState<number | null>(null)
+  const [isSyncing, setIsSyncing] = useState<boolean>(false)
+  const [syncError, setSyncError] = useState<string | null>(null)
+  const autoSyncTimeoutRef = useRef<any>(null)
+
   // Navigation tabs (Mobile / Tablet active tab)
   const [activeTab, setActiveTab] = useState<'trips' | 'planner' | 'calendar'>('trips')
   // Desktop secondary panel tab
@@ -79,14 +96,29 @@ export function App() {
   const [isBackupModalOpen, setIsBackupModalOpen] = useState(false)
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false)
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
+  const [isSyncModalOpen, setIsSyncModalOpen] = useState(false)
 
-  // Initialize storage & auto-request persistence
+  // Initialize storage & auto-request persistence & sync preferences
   useEffect(() => {
     async function init() {
       const storedData = await loadAppStorage(t.myPassport)
+      const prefs = loadSyncPreferences()
+      
       setAppData(storedData)
+      setSyncKey(prefs.syncKey)
+      setAutoSync(prefs.autoSync)
+      setLastSyncTime(prefs.lastSyncTime)
       setIsLoaded(true)
       requestPersistentStorage().catch(() => {})
+
+      // Check if URL has ?sync=... pairing key
+      const urlSyncKey = extractSyncKeyFromUrl()
+      if (urlSyncKey) {
+        handleConnectSyncKey(urlSyncKey)
+      } else if (prefs.syncKey && prefs.autoSync && navigator.onLine) {
+        // Initial background pull from Cloudflare D1
+        syncWithCloud(prefs.syncKey, storedData)
+      }
     }
     init()
   }, [])
@@ -95,8 +127,93 @@ export function App() {
   useEffect(() => {
     if (isLoaded) {
       saveAppStorage(appData)
+
+      // Debounced auto-push to Cloudflare D1 if sync is active
+      if (syncKey && autoSync && isOnline) {
+        if (autoSyncTimeoutRef.current) clearTimeout(autoSyncTimeoutRef.current)
+        autoSyncTimeoutRef.current = setTimeout(() => {
+          syncWithCloud(syncKey, appData)
+        }, 1500)
+      }
     }
-  }, [appData, isLoaded])
+  }, [appData, isLoaded, syncKey, autoSync, isOnline])
+
+  // Core Cloudflare Sync handler
+  const syncWithCloud = useCallback(
+    async (key: string, currentData: AppStorageData) => {
+      setIsSyncing(true)
+      setSyncError(null)
+
+      try {
+        const pushResult = await pushLocalVault(key, currentData)
+
+        if (pushResult.conflict && pushResult.remoteData) {
+          // Conflict: Remote database was newer, update local state
+          setAppData(pushResult.remoteData)
+          setLastSyncTime(pushResult.remoteUpdatedAt || Date.now())
+          saveSyncPreferences(key, autoSync, pushResult.remoteUpdatedAt || Date.now())
+        } else {
+          const now = Date.now()
+          setLastSyncTime(now)
+          saveSyncPreferences(key, autoSync, now)
+        }
+      } catch (err: any) {
+        console.warn('Sync error:', err)
+        setSyncError(err.message || 'Sync failed')
+      } finally {
+        setIsSyncing(false)
+      }
+    },
+    [autoSync]
+  )
+
+  const handleManualSync = () => {
+    if (!syncKey) return
+    triggerHaptic('light')
+    syncWithCloud(syncKey, appData)
+  }
+
+  const handleEnableNewSyncKey = async () => {
+    const newKey = generateSyncKey()
+    setSyncKey(newKey)
+    saveSyncPreferences(newKey, true, Date.now())
+    triggerHaptic('medium')
+    await syncWithCloud(newKey, appData)
+  }
+
+  const handleConnectSyncKey = async (key: string) => {
+    setIsSyncing(true)
+    setSyncError(null)
+    triggerHaptic('medium')
+
+    try {
+      const result = await fetchRemoteVault(key)
+      if (result.payload && Array.isArray(result.payload.profiles)) {
+        setAppData(result.payload)
+        setSyncKey(key)
+        setLastSyncTime(result.updatedAt)
+        saveSyncPreferences(key, true, result.updatedAt)
+        setIsSyncModalOpen(false)
+      }
+    } catch (err: any) {
+      setSyncError(err.message || 'Could not connect to vault with this key')
+      triggerHaptic('error')
+    } finally {
+      setIsSyncing(false)
+    }
+  }
+
+  const handleDisconnectSync = () => {
+    setSyncKey(null)
+    setLastSyncTime(null)
+    saveSyncPreferences(null, false)
+    triggerHaptic('warning')
+  }
+
+  const handleToggleAutoSync = (enabled: boolean) => {
+    setAutoSync(enabled)
+    saveSyncPreferences(syncKey, enabled, lastSyncTime || undefined)
+  }
 
   // Get active profile and its trips
   const activeProfile =
@@ -113,7 +230,8 @@ export function App() {
         isTripModalOpen ||
         isBackupModalOpen ||
         isInfoModalOpen ||
-        isProfileModalOpen
+        isProfileModalOpen ||
+        isSyncModalOpen
       ) {
         return
       }
@@ -134,7 +252,7 @@ export function App() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isTripModalOpen, isBackupModalOpen, isInfoModalOpen, isProfileModalOpen])
+  }, [isTripModalOpen, isBackupModalOpen, isInfoModalOpen, isProfileModalOpen, isSyncModalOpen])
 
   // Calculate live summary for current active profile trips
   const summary = calculateSchengenSummary(currentTrips, referenceDate)
@@ -283,8 +401,10 @@ export function App() {
         activeProfile={activeProfile}
         isOnline={isOnline}
         hasUpdate={hasUpdate}
+        isSyncActive={Boolean(syncKey)}
         onReloadApp={reloadApp}
         onOpenProfileModal={() => setIsProfileModalOpen(true)}
+        onOpenSyncModal={() => setIsSyncModalOpen(true)}
         onToggleLanguage={handleToggleLanguage}
         onOpenAddModal={handleAddTrip}
         onOpenBackupModal={() => setIsBackupModalOpen(true)}
@@ -523,6 +643,22 @@ export function App() {
         onSelectProfile={handleSelectProfile}
         onAddProfile={handleAddProfile}
         onDeleteProfile={handleDeleteProfile}
+      />
+
+      <SyncModal
+        isOpen={isSyncModalOpen}
+        syncKey={syncKey}
+        autoSync={autoSync}
+        lastSyncTime={lastSyncTime}
+        isSyncing={isSyncing}
+        syncError={syncError}
+        t={t}
+        onClose={() => setIsSyncModalOpen(false)}
+        onEnableNewSyncKey={handleEnableNewSyncKey}
+        onConnectSyncKey={handleConnectSyncKey}
+        onToggleAutoSync={handleToggleAutoSync}
+        onManualSync={handleManualSync}
+        onDisconnectSync={handleDisconnectSync}
       />
 
       <InfoModal

@@ -19,7 +19,12 @@ An open-source, privacy-first mobile web application and PWA for tracking, calcu
 - **Smart Trip Planner:**
   - *“When can I travel for N days?”* — Automatically discovers the earliest legal entry date for your desired trip length.
   - *“Check trip dates”* — Validates proposed future trips and flags exact overstay dates if a limit is exceeded.
-- **Interactive Calendar:** Visual month-by-month view with color-coded markers for completed trips, planned trips, and overstay warnings.
+- **Interactive Calendar:** Visual month-by-month view with touch swipe navigation between months, color-coded markers for completed trips, planned trips, and overstay warnings.
+- **Multi-Profile & Multi-Passport Support:** Track multiple passports, family members, or travelers with separate color tags and isolated trip calculations.
+- **Multi-Device Cloud Sync (Cloudflare D1):**
+  - Instant pairing between phone and laptop via a high-entropy secret sync key or 1-click URL (`?sync=...`).
+  - No accounts, no emails, no passwords.
+  - Powered by serverless Cloudflare Pages Functions and Cloudflare D1 SQLite database.
 - **Multi-Device Responsive Architecture:**
   - **Mobile Smartphones (< 640px):** Bottom Navigation, native-like Bottom Sheets with swipe gestures, and Safe Area insets (`env(safe-area-inset-top)`, `env(safe-area-inset-bottom)`) for iPhone notch, Dynamic Island, and Home bar.
   - **Dual-Screen & Foldables (Duo / Galaxy Fold):** CSS dual-screen media query support (`@media (horizontal-viewport-segments: 2)`), splitting trip history and interactive planner across both screens with seam protection.
@@ -27,17 +32,20 @@ An open-source, privacy-first mobile web application and PWA for tracking, calcu
   - **Desktops (> 1024px):** 2-panel workstation layout with keyboard shortcuts (`N` for new trip, `Esc` to dismiss, `1`/`2`/`3` for views).
 - **Offline & Local-First Privacy:**
   - Powered by **IndexedDB** with `localStorage` fallback.
+  - Full PWA Service Worker caching (`/sw.js`) allowing 100% offline usage.
   - Automatically requests browser **Persistent Storage** (`navigator.storage.persist()`) to prevent cache purges.
   - Zero third-party trackers, zero cookies, zero external telemetry. All calculations run client-side.
 - **1-Click Backup & Restore:** Export and import trip records to/from JSON files at any time.
-- **Installable PWA:** Can be installed directly to home screens on iOS (Safari -> "Add to Home Screen") and Android (Chrome -> "Install App").
+- **Bilingual Interface:** Instant language toggle between English and Russian (**EN / RU**).
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Framework:** [React 19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/) + [Vite](https://vite.dev/)
+- **Frontend:** [React 19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/) + [Vite](https://vite.dev/)
 - **Styling:** [Tailwind CSS v4](https://tailwindcss.com/) + [Lucide Icons](https://lucide.dev/)
+- **Backend / Serverless:** Cloudflare Pages Functions
+- **Database:** [Cloudflare D1](https://developers.cloudflare.com/d1/) (Serverless SQLite)
 - **Date Utilities:** [date-fns](https://date-fns.org/)
 - **Storage:** [idb-keyval](https://github.com/jakearchibald/idb-keyval) (IndexedDB wrapper)
 - **Unit Testing:** [Vitest](https://vitest.dev/)
@@ -93,9 +101,9 @@ npm run build
 
 ---
 
-## ☁️ Deploy to Cloudflare Pages (Free Tier)
+## ☁️ Deploy to Cloudflare Pages & D1 (Free Tier)
 
-You can deploy your own instance to Cloudflare Pages in less than 2 minutes:
+### 1. Deploy Frontend to Cloudflare Pages
 
 1. Sign in to your [Cloudflare Dashboard](https://dash.cloudflare.com/).
 2. Navigate to **Workers & Pages** -> **Create application** -> select the **Pages** tab.
@@ -106,7 +114,24 @@ You can deploy your own instance to Cloudflare Pages in less than 2 minutes:
    - **Build command:** `npm run build`
    - **Build output directory:** `dist`
    - **Production branch:** `main`
-6. Click **Save and Deploy**. Cloudflare provides an instant SSL-secured URL (`*.pages.dev`) with free global CDN distribution.
+6. Click **Save and Deploy**.
+
+### 2. Enable Cloudflare D1 Cloud Sync
+
+In your Cloudflare dashboard (or using Wrangler CLI):
+
+```bash
+# 1. Create your serverless SQLite D1 database
+npx wrangler d1 create schengen-db
+
+# 2. Run initial database migration
+npx wrangler d1 execute schengen-db --file=./migrations/0001_initial_schema.sql
+```
+
+3. In the Cloudflare Dashboard under your Pages project:
+   - Go to **Settings** -> **Functions** -> **D1 database bindings**.
+   - Add a binding named **`DB`** connected to your `schengen-db`.
+   - Now any device can pair and sync in real time!
 
 ---
 

@@ -24,6 +24,29 @@ export interface TranslationDictionary {
   myPassport: string
   activeProfileLabel: string
 
+  // Cloudflare Sync
+  syncModalTitle: string
+  syncActiveBadge: string
+  syncDisabledBadge: string
+  syncNowBtn: string
+  syncingText: string
+  lastSyncedAt: (time: string) => string
+  createSyncKeyBtn: string
+  connectExistingDeviceBtn: string
+  enterSyncKeyPlaceholder: string
+  connectBtn: string
+  pairingUrlCopied: string
+  copyPairingLinkBtn: string
+  copyKeyBtn: string
+  copiedBtn: string
+  disconnectSyncBtn: string
+  autoSyncToggleTitle: string
+  autoSyncToggleDesc: string
+  syncExplainerTitle: string
+  syncExplainerDesc: string
+  syncSetupInstructionsTitle: string
+  syncSetupInstructionsDesc: string
+
   // Status Card
   referenceDate: string
   resetToday: string
@@ -166,6 +189,30 @@ export const translations: Record<Language, TranslationDictionary> = {
     myPassport: 'My Passport',
     activeProfileLabel: 'Active profile:',
 
+    syncModalTitle: 'Cloudflare Cloud Sync',
+    syncActiveBadge: 'Cloud Sync Active',
+    syncDisabledBadge: 'Local-Only Mode',
+    syncNowBtn: 'Sync Now',
+    syncingText: 'Syncing...',
+    lastSyncedAt: (time) => `Last synced: ${time}`,
+    createSyncKeyBtn: 'Enable Cloud Sync (New Key)',
+    connectExistingDeviceBtn: 'Connect Existing Device',
+    enterSyncKeyPlaceholder: 'Paste your secret sync key (e.g. vg_...)',
+    connectBtn: 'Connect',
+    pairingUrlCopied: 'Pairing link copied to clipboard!',
+    copyPairingLinkBtn: 'Copy Pairing Link',
+    copyKeyBtn: 'Copy Key',
+    copiedBtn: 'Copied!',
+    disconnectSyncBtn: 'Disconnect Cloud Sync',
+    autoSyncToggleTitle: 'Automatic Synchronization',
+    autoSyncToggleDesc: 'Automatically sync changes to Cloudflare D1 when trips are modified.',
+    syncExplainerTitle: 'Private Multi-Device Sync',
+    syncExplainerDesc:
+      'Sync all your devices without accounts or passwords. Data is secured by your high-entropy sync key and stored in your Cloudflare D1 serverless database.',
+    syncSetupInstructionsTitle: 'Cloudflare D1 Setup Guide',
+    syncSetupInstructionsDesc:
+      'To host this on your Cloudflare account, run: npx wrangler d1 create schengen-db and add the binding DB in wrangler.toml or Cloudflare Dashboard.',
+
     referenceDate: 'Reference Date:',
     resetToday: 'Reset to today',
     overstayWarningTitle: 'Overstay detected!',
@@ -305,6 +352,30 @@ export const translations: Record<Language, TranslationDictionary> = {
     cannotDeleteOnlyProfile: 'Нельзя удалить единственный профиль',
     myPassport: 'Мой паспорт',
     activeProfileLabel: 'Активный профиль:',
+
+    syncModalTitle: 'Облачная синхронизация Cloudflare',
+    syncActiveBadge: 'Синхронизация активна',
+    syncDisabledBadge: 'Локальный режим',
+    syncNowBtn: 'Синхронизировать сейчас',
+    syncingText: 'Синхронизация...',
+    lastSyncedAt: (time) => `Посл. синхронизация: ${time}`,
+    createSyncKeyBtn: 'Включить синхронизацию (Новый ключ)',
+    connectExistingDeviceBtn: 'Подключить существующее устройство',
+    enterSyncKeyPlaceholder: 'Вставьте ваш секретный ключ (например, vg_...)',
+    connectBtn: 'Подключить',
+    pairingUrlCopied: 'Ссылка для подключения скопирована!',
+    copyPairingLinkBtn: 'Скопировать ссылку сопряжения',
+    copyKeyBtn: 'Скопировать ключ',
+    copiedBtn: 'Скопировано!',
+    disconnectSyncBtn: 'Отключить облачную синхронизацию',
+    autoSyncToggleTitle: 'Автоматическая синхронизация',
+    autoSyncToggleDesc: 'Автоматически синхронизировать изменения с Cloudflare D1 при редактировании поездок.',
+    syncExplainerTitle: 'Приватная синхронизация без паролей',
+    syncExplainerDesc:
+      'Синхронизируйте телефон, планшет и ноутбук без регистрации и почты. Доступ защищен криптографическим ключом сопряжения в базе Cloudflare D1.',
+    syncSetupInstructionsTitle: 'Инструкция по настройке Cloudflare D1',
+    syncSetupInstructionsDesc:
+      'Для собственного хостинга создайте базу: npx wrangler d1 create schengen-db и привяжите DB в wrangler.toml или в панели Cloudflare.',
 
     referenceDate: 'Контрольная дата:',
     resetToday: 'Вернуть сегодня',
