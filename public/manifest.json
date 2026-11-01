@@ -1,0 +1,17 @@
+{
+  "name": "Schengen Visa Calculator 90/180",
+  "short_name": "Шенген 90/180",
+  "description": "Калькулятор шенгенских дней по правилу 90/180 с сохранением истории и планировщиком.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0f19",
+  "theme_color": "#0b0f19",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
