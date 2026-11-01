@@ -1,11 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
   calculateSchengenSummary,
-  countDaysIn180Window,
   findEarliestEntryDate,
   getTripDuration,
   simulateTrip,
-  buildSchengenDaysMap,
   type Trip,
 } from '../schengen'
 
