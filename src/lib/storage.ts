@@ -104,7 +104,7 @@ export function parseTripsJson(jsonContent: string): Trip[] {
   const rawList = Array.isArray(parsed) ? parsed : parsed.trips
 
   if (!Array.isArray(rawList)) {
-    throw new Error('Файл не содержит списка поездок')
+    throw new Error('File does not contain a valid list of trips')
   }
 
   const validTrips: Trip[] = []

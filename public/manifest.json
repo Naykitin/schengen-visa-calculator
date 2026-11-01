@@ -1,7 +1,7 @@
 {
-  "name": "Schengen Visa Calculator 90/180",
-  "short_name": "Шенген 90/180",
-  "description": "Калькулятор шенгенских дней по правилу 90/180 с сохранением истории и планировщиком.",
+  "name": "Schengen Visa Calculator (90/180)",
+  "short_name": "Schengen 90/180",
+  "description": "Calculate and plan Schengen visa days under the official 90/180 rule with offline storage.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0b0f19",

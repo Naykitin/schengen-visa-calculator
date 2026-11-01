@@ -226,7 +226,7 @@ export function calculateSchengenSummary(
         recoveryDates.push({
           date: dropDateStr,
           daysGained: 1,
-          explanation: `День от ${stayDateStr} выходит из 180-дневного окна`,
+          explanation: `Day from ${stayDateStr} drops out of the 180-day window`,
         })
       }
     }
