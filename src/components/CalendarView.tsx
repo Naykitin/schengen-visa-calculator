@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import {
   ChevronLeft,
   ChevronRight,
@@ -16,8 +16,10 @@ import {
   startOfWeek,
   subMonths,
 } from 'date-fns'
-import { ru } from 'date-fns/locale'
+import { ru, enUS } from 'date-fns/locale'
 import type { Trip } from '../lib/schengen'
+import type { Language, TranslationDictionary } from '../lib/i18n'
+import { triggerHaptic } from '../lib/haptics'
 import {
   buildSchengenDaysMap,
   countDaysIn180Window,
@@ -27,18 +29,25 @@ import {
 interface CalendarViewProps {
   trips: Trip[]
   selectedDate: string
+  lang: Language
+  t: TranslationDictionary
   onSelectDate: (date: string) => void
 }
 
 export const CalendarView: React.FC<CalendarViewProps> = ({
   trips,
   selectedDate,
+  lang,
+  t,
   onSelectDate,
 }) => {
   const [currentMonth, setCurrentMonth] = useState<Date>(
     selectedDate ? parseISO(selectedDate) : new Date()
   )
 
+  const touchStartX = useRef<number | null>(null)
+
+  const dateLocale = lang === 'ru' ? ru : enUS
   const daysMap = buildSchengenDaysMap(trips)
 
   const monthStart = startOfMonth(currentMonth)
@@ -48,7 +57,32 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
   const calendarDays = eachDayOfInterval({ start: startDate, end: endDate })
 
-  const weekDayNames = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
+  const weekDayNames = lang === 'ru' 
+    ? ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
+    : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+  // Swipe gesture for mobile month navigation
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return
+    const diffX = e.changedTouches[0].clientX - touchStartX.current
+    touchStartX.current = null
+
+    if (Math.abs(diffX) > 45) {
+      if (diffX > 0) {
+        // Swiped right -> Previous month
+        setCurrentMonth((prev) => subMonths(prev, 1))
+        triggerHaptic('light')
+      } else {
+        // Swiped left -> Next month
+        setCurrentMonth((prev) => addMonths(prev, 1))
+        triggerHaptic('light')
+      }
+    }
+  }
 
   // Information about currently selected day
   const selectedDateStr = selectedDate
@@ -58,31 +92,44 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   const selectedTrip = selectedTripId ? trips.find(t => t.id === selectedTripId) : null
 
   return (
-    <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-5 shadow-xl space-y-4 backdrop-blur-sm">
+    <div
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      className="bg-slate-900/80 border border-slate-800 rounded-3xl p-5 shadow-xl space-y-4 backdrop-blur-sm select-none"
+    >
       {/* Month Navigation */}
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-bold text-white capitalize">
-          {format(currentMonth, 'LLLL yyyy', { locale: ru })}
+          {format(currentMonth, 'LLLL yyyy', { locale: dateLocale })}
         </h3>
 
         <div className="flex items-center gap-1">
           <button
-            onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+            onClick={() => {
+              setCurrentMonth(subMonths(currentMonth, 1))
+              triggerHaptic('light')
+            }}
             className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
-            title="Предыдущий месяц"
+            title="Previous Month"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
           <button
-            onClick={() => setCurrentMonth(new Date())}
-            className="text-[11px] font-semibold text-blue-400 hover:text-blue-300 px-2 py-1 rounded-lg hover:bg-slate-800"
+            onClick={() => {
+              setCurrentMonth(new Date())
+              triggerHaptic('light')
+            }}
+            className="text-[11px] font-semibold text-blue-400 hover:text-blue-300 px-2.5 py-1 rounded-lg hover:bg-slate-800"
           >
-            Сегодня
+            {t.todayBtn}
           </button>
           <button
-            onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+            onClick={() => {
+              setCurrentMonth(addMonths(currentMonth, 1))
+              triggerHaptic('light')
+            }}
             className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
-            title="Следующий месяц"
+            title="Next Month"
           >
             <ChevronRight className="w-5 h-5" />
           </button>
@@ -133,7 +180,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           return (
             <button
               key={dateStr}
-              onClick={() => onSelectDate(dateStr)}
+              onClick={() => {
+                onSelectDate(dateStr)
+                triggerHaptic('light')
+              }}
               className={`h-11 rounded-xl flex flex-col items-center justify-center relative transition-all text-xs ${dayStyle} ${
                 isSelected ? 'ring-2 ring-blue-400 ring-offset-2 ring-offset-slate-900 z-10' : ''
               } ${badgeStyle}`}
@@ -151,19 +201,19 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
       <div className="flex items-center justify-center gap-3 pt-2 text-[11px] text-slate-400 flex-wrap">
         <div className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-md bg-blue-600 inline-block" />
-          <span>Поездка</span>
+          <span>{t.legendTrip}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-md bg-indigo-600/70 border border-indigo-400/50 inline-block" />
-          <span>План</span>
+          <span>{t.legendPlan}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-md bg-rose-500 inline-block" />
-          <span>Оверстей (&gt;90)</span>
+          <span>{t.legendOverstay}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
-          <span>Сегодня</span>
+          <span>{t.legendToday}</span>
         </div>
       </div>
 
@@ -172,27 +222,27 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         <div className="p-3 bg-slate-950/80 border border-slate-800 rounded-2xl text-xs space-y-1">
           <div className="flex items-center justify-between text-slate-300">
             <span className="font-semibold">
-              {format(parseISO(selectedDateStr), 'd MMMM yyyy', { locale: ru })}:
+              {format(parseISO(selectedDateStr), 'd MMMM yyyy', { locale: dateLocale })}:
             </span>
             <span
               className={`font-bold ${
                 selectedUsed180 > 90 ? 'text-rose-400' : 'text-slate-200'
               }`}
             >
-              {selectedUsed180} / 90 дней
+              {selectedUsed180} / 90 {t.days}
             </span>
           </div>
           <div className="text-[11px] text-slate-400">
             {isSelectedInSchengen ? (
               <span className="text-blue-300">
-                В зоне Шенгена {selectedTrip?.title ? `(${selectedTrip.title})` : ''}
+                {t.dayDetailsInSchengen(selectedTrip?.title)}
               </span>
             ) : (
-              <span>Вне зоны Шенгена</span>
+              <span>{t.dayDetailsOutside}</span>
             )}
             {' · '}
             <span>
-              Остаток: {Math.max(0, 90 - selectedUsed180)} дн.
+              {t.remainingAllowance(Math.max(0, 90 - selectedUsed180))}
             </span>
           </div>
         </div>

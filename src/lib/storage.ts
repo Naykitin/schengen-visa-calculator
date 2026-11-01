@@ -1,7 +1,33 @@
 import { get, set } from 'idb-keyval'
 import type { Trip } from './schengen'
+import { isValidDateString, safeJsonParse, sanitizeString } from './sanitize'
 
-const STORAGE_KEY = 'schengen_trips_v1'
+export interface Profile {
+  id: string
+  name: string
+  color: string // Tailwind color key, e.g. 'blue' | 'indigo' | 'emerald' | 'amber' | 'rose' | 'purple'
+  trips: Trip[]
+}
+
+export interface AppStorageData {
+  version: string
+  activeProfileId: string
+  profiles: Profile[]
+}
+
+const STORAGE_PROFILES_KEY = 'schengen_profiles_v2'
+const LEGACY_TRIPS_KEY = 'schengen_trips_v1'
+
+const DEFAULT_PROFILE_ID = 'default_profile'
+
+export const PROFILE_COLORS = [
+  { id: 'blue', name: 'Blue', bg: 'bg-blue-600', ring: 'ring-blue-500' },
+  { id: 'indigo', name: 'Indigo', bg: 'bg-indigo-600', ring: 'ring-indigo-500' },
+  { id: 'emerald', name: 'Emerald', bg: 'bg-emerald-600', ring: 'ring-emerald-500' },
+  { id: 'amber', name: 'Amber', bg: 'bg-amber-600', ring: 'ring-amber-500' },
+  { id: 'purple', name: 'Purple', bg: 'bg-purple-600', ring: 'ring-purple-500' },
+  { id: 'rose', name: 'Rose', bg: 'bg-rose-600', ring: 'ring-rose-500' },
+]
 
 /**
  * Request persistent storage from browser if available
@@ -24,72 +50,100 @@ export async function requestPersistentStorage(): Promise<boolean> {
 }
 
 /**
- * Load trips from IndexedDB with localStorage fallback
+ * Load app storage data with multi-profile and legacy migration
  */
-export async function loadTrips(): Promise<Trip[]> {
+export async function loadAppStorage(defaultName: string = 'My Passport'): Promise<AppStorageData> {
   try {
-    const data = await get<Trip[]>(STORAGE_KEY)
-    if (Array.isArray(data)) {
+    // 1. Try to load v2 multi-profile data from IndexedDB
+    const data = await get<AppStorageData>(STORAGE_PROFILES_KEY)
+    if (data && Array.isArray(data.profiles) && data.profiles.length > 0) {
       return data
     }
 
-    // Fallback to localStorage
-    const local = localStorage.getItem(STORAGE_KEY)
-    if (local) {
-      const parsed = JSON.parse(local)
-      if (Array.isArray(parsed)) {
-        // Migrate to IndexedDB
-        await set(STORAGE_KEY, parsed)
+    // 2. Try localStorage for v2
+    const localV2 = localStorage.getItem(STORAGE_PROFILES_KEY)
+    if (localV2) {
+      const parsed = safeJsonParse(localV2)
+      if (parsed && Array.isArray(parsed.profiles) && parsed.profiles.length > 0) {
+        await set(STORAGE_PROFILES_KEY, parsed)
         return parsed
       }
     }
+
+    // 3. Migrate from legacy v1 trips if available
+    const legacyTrips = await get<Trip[]>(LEGACY_TRIPS_KEY)
+    const localLegacy = localStorage.getItem(LEGACY_TRIPS_KEY)
+    const tripsToMigrate: Trip[] = Array.isArray(legacyTrips)
+      ? legacyTrips
+      : localLegacy
+      ? safeJsonParse(localLegacy)
+      : []
+
+    const initialData: AppStorageData = {
+      version: '2.0',
+      activeProfileId: DEFAULT_PROFILE_ID,
+      profiles: [
+        {
+          id: DEFAULT_PROFILE_ID,
+          name: sanitizeString(defaultName, 50),
+          color: 'blue',
+          trips: Array.isArray(tripsToMigrate) ? sanitizeTripsList(tripsToMigrate) : [],
+        },
+      ],
+    }
+
+    await saveAppStorage(initialData)
+    return initialData
   } catch (err) {
-    console.error('Failed to load trips from IndexedDB, trying localStorage:', err)
-    try {
-      const local = localStorage.getItem(STORAGE_KEY)
-      if (local) return JSON.parse(local)
-    } catch {
-      // ignore
+    console.error('Failed to load storage, returning default state:', err)
+    return {
+      version: '2.0',
+      activeProfileId: DEFAULT_PROFILE_ID,
+      profiles: [
+        {
+          id: DEFAULT_PROFILE_ID,
+          name: sanitizeString(defaultName, 50),
+          color: 'blue',
+          trips: [],
+        },
+      ],
     }
   }
-
-  return []
 }
 
 /**
- * Save trips to both IndexedDB and localStorage for maximum resilience
+ * Save app storage data to both IndexedDB and localStorage
  */
-export async function saveTrips(trips: Trip[]): Promise<void> {
+export async function saveAppStorage(data: AppStorageData): Promise<void> {
   try {
-    await set(STORAGE_KEY, trips)
+    await set(STORAGE_PROFILES_KEY, data)
   } catch (err) {
     console.warn('Failed to save to IndexedDB:', err)
   }
 
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(trips))
+    localStorage.setItem(STORAGE_PROFILES_KEY, JSON.stringify(data))
   } catch (err) {
     console.warn('Failed to save to localStorage:', err)
   }
 }
 
 /**
- * Export trips to a downloadable JSON file
+ * Export full backup containing all profiles
  */
-export function exportTripsToJson(trips: Trip[]): void {
-  const exportData = {
-    version: '1.0',
+export function exportAllDataToJson(data: AppStorageData): void {
+  const exportPayload = {
+    ...data,
     exportDate: new Date().toISOString(),
-    trips,
   }
 
-  const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+  const blob = new Blob([JSON.stringify(exportPayload, null, 2)], {
     type: 'application/json',
   })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `schengen-trips-backup-${new Date().toISOString().slice(0, 10)}.json`
+  a.download = `schengen-full-backup-${new Date().toISOString().slice(0, 10)}.json`
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)
@@ -97,34 +151,69 @@ export function exportTripsToJson(trips: Trip[]): void {
 }
 
 /**
- * Parse and validate JSON content for trip import
+ * Parse and validate JSON content for backup import (supports v1 and v2 formats)
+ * Protected against Prototype Pollution and malformed data
  */
-export function parseTripsJson(jsonContent: string): Trip[] {
-  const parsed = JSON.parse(jsonContent)
-  const rawList = Array.isArray(parsed) ? parsed : parsed.trips
+export function parseBackupJson(jsonContent: string, currentData: AppStorageData): AppStorageData {
+  const parsed = safeJsonParse(jsonContent)
 
-  if (!Array.isArray(rawList)) {
-    throw new Error('Файл не содержит списка поездок')
+  // Case A: Full v2 backup format
+  if (parsed && Array.isArray(parsed.profiles) && parsed.profiles.length > 0) {
+    const validProfiles: Profile[] = []
+    for (const p of parsed.profiles) {
+      if (typeof p.id === 'string' && typeof p.name === 'string' && Array.isArray(p.trips)) {
+        validProfiles.push({
+          id: sanitizeString(p.id, 50),
+          name: sanitizeString(p.name, 50),
+          color: sanitizeString(p.color || 'blue', 20),
+          trips: sanitizeTripsList(p.trips),
+        })
+      }
+    }
+
+    if (validProfiles.length > 0) {
+      return {
+        version: '2.0',
+        activeProfileId: validProfiles[0].id,
+        profiles: validProfiles,
+      }
+    }
   }
 
+  // Case B: Legacy v1 trip list (import into active profile)
+  const rawList = Array.isArray(parsed) ? parsed : parsed?.trips
+  if (Array.isArray(rawList)) {
+    const sanitizedTrips = sanitizeTripsList(rawList)
+    const updatedProfiles = currentData.profiles.map((p) =>
+      p.id === currentData.activeProfileId ? { ...p, trips: sanitizedTrips } : p
+    )
+
+    return {
+      ...currentData,
+      profiles: updatedProfiles,
+    }
+  }
+
+  throw new Error('File does not contain valid Schengen trip or profile data')
+}
+
+export function sanitizeTripsList(rawList: any[]): Trip[] {
   const validTrips: Trip[] = []
   for (const item of rawList) {
     if (
-      typeof item.entryDate === 'string' &&
-      typeof item.exitDate === 'string' &&
-      item.entryDate.length === 10 &&
-      item.exitDate.length === 10
+      isValidDateString(item.entryDate) &&
+      isValidDateString(item.exitDate) &&
+      item.entryDate <= item.exitDate
     ) {
       validTrips.push({
-        id: item.id || `trip_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        id: sanitizeString(item.id || `trip_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`, 60),
         entryDate: item.entryDate,
         exitDate: item.exitDate,
-        title: item.title || '',
-        notes: item.notes || '',
+        title: sanitizeString(item.title || '', 100),
+        notes: sanitizeString(item.notes || '', 500),
         isPlanned: Boolean(item.isPlanned),
       })
     }
   }
-
   return validTrips
 }

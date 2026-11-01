@@ -134,6 +134,7 @@ export function countDaysIn180Window(
 
 /**
  * Calculate complete status for a given reference date (usually today).
+ * Optimized with sliding window $O(1)$ calculations.
  */
 export function calculateSchengenSummary(
   trips: Trip[],
@@ -158,11 +159,10 @@ export function calculateSchengenSummary(
       })
     : undefined
 
-  // Check if any overstay occurred historically or in planned trips
+  // Check if any overstay occurred historically
   let hasOverstay = false
   let firstOverstayDate: string | undefined
 
-  // Look through all trip dates to verify if 90 limit was exceeded anywhere
   if (trips.length > 0) {
     const allStartDates = trips.map(t => fromDateString(t.entryDate))
     const allEndDates = trips.map(t => fromDateString(t.exitDate))
@@ -170,41 +170,65 @@ export function calculateSchengenSummary(
     const maxDate = max(allEndDates)
 
     let scanDate = minDate
+    let currentWindowCount = countDaysIn180Window(toDateString(scanDate), daysMap)
+
     while (!isAfter(scanDate, maxDate)) {
-      const scanDateStr = toDateString(scanDate)
-      const used = countDaysIn180Window(scanDateStr, daysMap)
-      if (used > 90) {
+      if (currentWindowCount > 90) {
         hasOverstay = true
         if (!firstOverstayDate) {
-          firstOverstayDate = scanDateStr
+          firstOverstayDate = toDateString(scanDate)
         }
         break
       }
-      scanDate = addDays(scanDate, 1)
+
+      // Slide window forward by 1 day: O(1) step
+      const nextDate = addDays(scanDate, 1)
+      const droppingDate = subDays(nextDate, 180)
+      if (daysMap.has(toDateString(nextDate))) currentWindowCount++
+      if (daysMap.has(toDateString(droppingDate))) currentWindowCount--
+
+      scanDate = nextDate
     }
   }
 
-  // Calculate maximum continuous stay starting today (or remaining in current stay)
+  // Calculate maximum continuous stay starting today using O(1) sliding window
   let maxContinuousStayRemaining = 0
   if (daysRemainingToday > 0) {
-    // Simulate staying day by day from reference date forward
     const simulatedDaysMap = new Map(daysMap)
     let simDate = refDate
+    let runningWindow = daysUsedInWindow
 
-    while (maxContinuousStayRemaining < 90) {
-      const simDateStr = toDateString(simDate)
-      simulatedDaysMap.set(simDateStr, 'simulation')
-      const windowCount = countDaysIn180Window(simDateStr, simulatedDaysMap)
-      if (windowCount > 90) {
-        break
+    // If today is not in Schengen, staying today adds 1
+    if (!daysMap.has(referenceDateStr)) {
+      runningWindow++
+      simulatedDaysMap.set(referenceDateStr, 'simulation')
+    }
+
+    if (runningWindow <= 90) {
+      maxContinuousStayRemaining = 1
+      let nextSimDate = addDays(simDate, 1)
+
+      while (maxContinuousStayRemaining < 90) {
+        const nextSimStr = toDateString(nextSimDate)
+        const droppingDateStr = toDateString(subDays(nextSimDate, 180))
+
+        simulatedDaysMap.set(nextSimStr, 'simulation')
+        runningWindow++ // nextSimDate is in stay
+        if (simulatedDaysMap.has(droppingDateStr)) {
+          runningWindow--
+        }
+
+        if (runningWindow > 90) {
+          break
+        }
+
+        maxContinuousStayRemaining++
+        nextSimDate = addDays(nextSimDate, 1)
       }
-      maxContinuousStayRemaining++
-      simDate = addDays(simDate, 1)
     }
   }
 
   // Calculate recovery dates: when old days drop out of the 180-day window
-  // Looking up to 180 days ahead
   const recoveryDates: Array<{
     date: string
     daysGained: number
@@ -226,7 +250,7 @@ export function calculateSchengenSummary(
         recoveryDates.push({
           date: dropDateStr,
           daysGained: 1,
-          explanation: `День от ${stayDateStr} выходит из 180-дневного окна`,
+          explanation: `Day from ${stayDateStr} drops out of the 180-day window`,
         })
       }
     }
@@ -244,12 +268,12 @@ export function calculateSchengenSummary(
     totalTripsCount: trips.length,
     hasOverstay,
     firstOverstayDate,
-    recoveryDates: recoveryDates.slice(0, 5), // top 5 upcoming days
+    recoveryDates: recoveryDates.slice(0, 5),
   }
 }
 
 /**
- * Simulate a proposed trip to see if it violates the 90/180 rule.
+ * Simulate a proposed trip using O(1) sliding window progression.
  */
 export function simulateTrip(
   existingTrips: Trip[],
@@ -283,13 +307,15 @@ export function simulateTrip(
     overstay: boolean
   }> = []
 
+  // Initialize count for first day
   let curr = start
+  let currentWindowCount = countDaysIn180Window(toDateString(curr), daysMap)
+
   while (!isAfter(curr, end)) {
     const dateStr = toDateString(curr)
-    const daysUsed = countDaysIn180Window(dateStr, daysMap)
-    maxDaysUsedDuringTrip = Math.max(maxDaysUsedDuringTrip, daysUsed)
+    maxDaysUsedDuringTrip = Math.max(maxDaysUsedDuringTrip, currentWindowCount)
 
-    const overstay = daysUsed > 90
+    const overstay = currentWindowCount > 90
     if (overstay) {
       isValid = false
       if (!firstViolationDate) {
@@ -299,11 +325,21 @@ export function simulateTrip(
 
     dayDetails.push({
       date: dateStr,
-      daysUsed,
+      daysUsed: currentWindowCount,
       overstay,
     })
 
-    curr = addDays(curr, 1)
+    // Advance to next day using O(1) sliding window
+    const nextDate = addDays(curr, 1)
+    if (!isAfter(nextDate, end)) {
+      const dropDateStr = toDateString(subDays(nextDate, 180))
+      const nextDateStr = toDateString(nextDate)
+
+      if (daysMap.has(nextDateStr)) currentWindowCount++
+      if (daysMap.has(dropDateStr)) currentWindowCount--
+    }
+
+    curr = nextDate
   }
 
   return {
@@ -318,8 +354,8 @@ export function simulateTrip(
 }
 
 /**
- * Find the earliest entry date for a stay of `durationDays` starting search from `startDate`.
- * Scans forward up to 365 days.
+ * Find earliest entry date for a stay of `durationDays` starting search from `startDate`.
+ * Scans forward up to 365 days with rapid early-exit verification.
  */
 export function findEarliestEntryDate(
   trips: Trip[],

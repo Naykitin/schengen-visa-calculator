@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react'
 import { AlertCircle, Check, Plane, X } from 'lucide-react'
 import type { Trip } from '../lib/schengen'
+import type { Language, TranslationDictionary } from '../lib/i18n'
 import { getTripDuration, simulateTrip } from '../lib/schengen'
 
 interface TripModalProps {
   isOpen: boolean
   initialTrip?: Trip | null
   existingTrips: Trip[]
+  lang: Language
+  t: TranslationDictionary
   onClose: () => void
   onSave: (trip: Trip) => void
 }
@@ -15,6 +18,8 @@ export const TripModal: React.FC<TripModalProps> = ({
   isOpen,
   initialTrip,
   existingTrips,
+  lang,
+  t,
   onClose,
   onSave,
 }) => {
@@ -43,6 +48,17 @@ export const TripModal: React.FC<TripModalProps> = ({
     setError(null)
   }, [initialTrip, isOpen])
 
+  // Close on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose])
+
   if (!isOpen) return null
 
   const duration = entryDate && exitDate ? getTripDuration(entryDate, exitDate) : 0
@@ -57,11 +73,11 @@ export const TripModal: React.FC<TripModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!entryDate || !exitDate) {
-      setError('Укажите дату въезда и выезда')
+      setError(t.errSelectDates)
       return
     }
     if (entryDate > exitDate) {
-      setError('Дата выезда не может быть раньше даты въезда')
+      setError(t.errExitBeforeEntry)
       return
     }
 
@@ -69,7 +85,7 @@ export const TripModal: React.FC<TripModalProps> = ({
       id: initialTrip ? initialTrip.id : `trip_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       entryDate,
       exitDate,
-      title: title.trim() || 'Поездка в Шенген',
+      title: title.trim() || (lang === 'ru' ? 'Поездка в Шенген' : 'Schengen Trip'),
       notes: notes.trim(),
       isPlanned,
     }
@@ -80,19 +96,25 @@ export const TripModal: React.FC<TripModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-      <div className="bg-slate-900 border border-slate-800 rounded-t-3xl sm:rounded-3xl w-full max-w-lg p-5 sm:p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      {/* Backdrop click to close */}
+      <div className="fixed inset-0" onClick={onClose} />
+
+      <div className="bg-slate-900 border border-slate-800 rounded-t-3xl sm:rounded-3xl w-full max-w-lg p-5 sm:p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto animate-slide-up sm:animate-fade-in safe-bottom z-10">
+        {/* Mobile drag handle indicator */}
+        <div className="w-12 h-1.5 bg-slate-700/80 rounded-full mx-auto mb-3 sm:hidden" />
+
         <div className="flex items-center justify-between pb-4 border-b border-slate-800">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-blue-500/10 text-blue-400 rounded-xl border border-blue-500/20">
+            <div className="p-2.5 bg-blue-500/10 text-blue-400 rounded-xl border border-blue-500/20">
               <Plane className="w-5 h-5" />
             </div>
             <h3 className="text-base font-bold text-white">
-              {initialTrip ? 'Редактировать поездку' : 'Новая поездка в Шенген'}
+              {initialTrip ? t.modalEditTripTitle : t.modalNewTripTitle}
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+            className="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -109,27 +131,27 @@ export const TripModal: React.FC<TripModalProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Дата въезда (включ.)
+                {t.entryDateLabel}
               </label>
               <input
                 type="date"
                 required
                 value={entryDate}
                 onChange={(e) => setEntryDate(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-base sm:text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Дата выезда (включ.)
+                {t.exitDateLabel}
               </label>
               <input
                 type="date"
                 required
                 value={exitDate}
                 onChange={(e) => setExitDate(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-base sm:text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
           </div>
@@ -137,23 +159,23 @@ export const TripModal: React.FC<TripModalProps> = ({
           {/* Quick duration indicator & 90/180 check */}
           {duration > 0 && simulation && (
             <div
-              className={`p-3 rounded-2xl border text-xs ${
+              className={`p-3.5 rounded-2xl border text-xs ${
                 simulation.isValid
                   ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-300'
                   : 'bg-rose-950/20 border-rose-500/30 text-rose-300'
               }`}
             >
               <div className="flex items-center justify-between font-semibold">
-                <span>Длительность: {duration} дн.</span>
+                <span>{t.durationDays(duration)}</span>
                 <span>
                   {simulation.isValid
-                    ? `Макс. использовано: ${simulation.maxDaysUsedDuringTrip}/90`
-                    : 'Превышение 90 дней!'}
+                    ? t.maxUsedDuringTrip(simulation.maxDaysUsedDuringTrip)
+                    : t.overstayAlert}
                 </span>
               </div>
               {!simulation.isValid && simulation.firstViolationDate && (
                 <p className="mt-1 text-[11px] text-rose-300/90">
-                  Лимит будет превышен начиная с даты {simulation.firstViolationDate}.
+                  {t.overstayStartsFrom(simulation.firstViolationDate)}
                 </p>
               )}
             </div>
@@ -161,27 +183,27 @@ export const TripModal: React.FC<TripModalProps> = ({
 
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Название / Страна (необязательно)
+              {t.titleLabel}
             </label>
             <input
               type="text"
-              placeholder="Например: Италия, Рим или Деловая поездка"
+              placeholder={t.titlePlaceholder}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-base sm:text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
             />
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Заметки (необязательно)
+              {t.notesLabel}
             </label>
             <textarea
               rows={2}
-              placeholder="Отель, перелет, цель визита..."
+              placeholder={t.notesPlaceholder}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-blue-500 transition-colors resize-none"
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-base sm:text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-blue-500 transition-colors resize-none"
             />
           </div>
 
@@ -193,9 +215,9 @@ export const TripModal: React.FC<TripModalProps> = ({
               className="w-4 h-4 rounded text-blue-600 bg-slate-900 border-slate-700 focus:ring-0"
             />
             <div className="text-xs">
-              <span className="font-semibold text-slate-200 block">Запланированная поездка</span>
+              <span className="font-semibold text-slate-200 block">{t.plannedCheckboxTitle}</span>
               <span className="text-slate-500 text-[11px]">
-                Отметьте, если это ещё не свершившаяся поездка
+                {t.plannedCheckboxSubtitle}
               </span>
             </div>
           </label>
@@ -204,16 +226,16 @@ export const TripModal: React.FC<TripModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2.5 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 font-semibold text-xs transition-colors"
+              className="flex-1 min-h-[44px] px-4 py-2.5 rounded-xl border border-slate-700 text-slate-300 hover:bg-slate-800 font-semibold text-xs transition-colors"
             >
-              Отмена
+              {t.cancelBtn}
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs shadow-md shadow-blue-600/30 transition-all flex items-center justify-center gap-1.5"
+              className="flex-1 min-h-[44px] px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs shadow-md shadow-blue-600/30 transition-all flex items-center justify-center gap-1.5"
             >
               <Check className="w-4 h-4" />
-              Сохранить
+              {t.saveBtn}
             </button>
           </div>
         </form>
