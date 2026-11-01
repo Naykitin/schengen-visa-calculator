@@ -1,63 +1,90 @@
 # Schengen Visa Calculator (90/180 Rule) 🇪🇺✈️
 
-An open-source, privacy-first mobile-friendly web app and PWA for tracking and planning Schengen area stays according to the official **90 days within any 180-day period** rule (EU Regulation 2016/399).
+An open-source, privacy-first mobile web application and PWA for tracking, calculating, and planning Schengen area stays according to the official **90 days within any 180-day period** rule (EU Regulation 2016/399).
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![CI Tests](https://github.com/Naykitin/schengen-visa-calculator/actions/workflows/ci.yml/badge.svg)](https://github.com/Naykitin/schengen-visa-calculator/actions)
 
-## ✨ Features
+---
 
-- **Accurate 90/180 Calculation:** Full compliance with the official EU Schengen Border Code calculation logic.
-- **Trip History Management:** Add, edit, and organize past and planned trips with date validation.
-- **Next Trip Planner:** Calculate maximum allowable stay length for future dates or find the earliest date you can enter for a desired duration.
-- **Visual Status & Timeline:** Clear indicators of remaining days, active 180-day windows, and overstay alerts.
-- **Offline & Local-First:** All data is stored securely on your device with zero tracking.
-- **Data Export & Import:** Backup and restore your trip records as JSON anytime.
-- **Cross-Platform:** Works on mobile and desktop browsers as a PWA, ready for native packaging (Capacitor/Android APK).
-- **Free Cloudflare Deployment:** Ready for one-click deployment on Cloudflare Pages.
+## 🌟 Возможности (Features)
 
-## 🛠️ Tech Stack
+- **Математически точный расчет 90/180:** Полное соответствие официальному Шенгенскому кодексу о границах (Regulation EU 2016/399). День въезда и выезда считаются днями пребывания.
+- **Интерактивный дашборд:** Наглядный счетчик оставшихся дней, индикатор «в Шенгене / вне Шенгена», график заполненности 90-дневного лимита.
+- **Умный планировщик будущих поездок:**
+  - *«Когда я смогу поехать на N дней?»* — автопоиск ближайшей даты въезда без нарушений.
+  - *«Проверить даты»* — валидация планируемой поездки с точным указанием дня возможного оверстея.
+- **Календарный вид:** Интерактивный календарь с цветовой индикацией поездок, планов и контролем 180-дневного окна на любой выбранный день.
+- **Офлайн и Local-First:**
+  - Данные хранятся в защищенной памяти устройства через `IndexedDB` с поддержкой Persistent Storage API (`navigator.storage.persist()`).
+  - Данные не стираются браузером и не передаются на сторонние серверы.
+- **Резервное копирование:** Экспорт и импорт истории поездок в JSON-файл в один клик.
+- **PWA (Мобильное приложение):** Устанавливается на главный экран iPhone (Safari -> «На экран «Домой»») и Android (Chrome -> «Установить приложение»), работает офлайн.
 
-- **Framework:** React 19 + TypeScript + Vite
-- **Styling:** Tailwind CSS + Lucide Icons
-- **Storage:** Local-first IndexedDB / LocalStorage with persistent storage API
-- **Deployment:** Cloudflare Pages
-- **Mobile wrapper:** PWA / Capacitor
+---
 
-## 🌿 GitFlow Branching Model
+## 🛠️ Стек технологий (Tech Stack)
 
-This project follows GitFlow:
-- `main` — Production-ready releases (tagged as `v1.0.0`, etc.)
-- `develop` — Main development branch
-- `feature/*` — Feature branches for new functionality
-- `hotfix/*` — Urgent fixes for production
+- **Frontend:** React 19, TypeScript, Vite
+- **Стилизация:** Tailwind CSS, Lucide Icons
+- **Хранилище:** IndexedDB (`idb-keyval`) + LocalStorage fallback
+- **Тестирование:** Vitest
+- **Хостинг:** Cloudflare Pages (100% Free)
+- **CI/CD:** GitHub Actions
 
-## 🚀 Getting Started
+---
 
-### Prerequisites
+## 🌿 GitFlow Модель ветвления
 
-- Node.js (v18 or newer)
-- npm (v9 or newer)
+В репозитории принята стандартная модель **GitFlow**:
+- `main` — Стабильные релизы в продакшн (тегируются `v1.0.0`, `v1.1.0` и т.д.).
+- `develop` — Основная ветка активной разработки.
+- `feature/*` — Ветки разработки отдельных функций (создаются от `develop` и вливаются обратно в `develop`).
+- `hotfix/*` — Срочные исправления для ветки `main`.
 
-### Installation
+---
 
+## 🚀 Локальный запуск (Local Development)
+
+### Требования
+- Node.js 18+ (рекомендуется 20+)
+- npm 9+
+
+### Команды
 ```bash
+# Клонирование репозитория
 git clone https://github.com/Naykitin/schengen-visa-calculator.git
 cd schengen-visa-calculator
+
+# Установка зависимостей
 npm install
-```
 
-### Development Server
-
-```bash
+# Запуск локального сервера разработки
 npm run dev
-```
 
-### Production Build
+# Запуск тестов расчета 90/180
+npm test
 
-```bash
+# Сборка для продакшена
 npm run build
 ```
 
-## 📄 License
+---
 
-This project is licensed under the [MIT License](LICENSE).
+## ☁️ Размещение на Cloudflare Pages (Бесплатно)
+
+1. Зайдите в [Cloudflare Dashboard](https://dash.cloudflare.com/)
+2. Перейдите в раздел **Workers & Pages** -> **Create application** -> вкладка **Pages**
+3. Нажмите **Connect to Git** и выберите репозиторий `Naykitin/schengen-visa-calculator`
+4. В настройках сборки укажите:
+   - **Framework preset:** `Vite`
+   - **Build command:** `npm run build`
+   - **Build output directory:** `dist`
+   - **Production branch:** `main` (или `develop` для превью)
+5. Нажмите **Save and Deploy**. Cloudflare автоматически соберет проект и выдаст бесплатный URL вида `*.pages.dev` с SSL-сертификатом и глобальным CDN.
+
+---
+
+## 📄 Лицензия (License)
+
+Проект распространяется под свободной пермиссивной лицензией **[MIT](LICENSE)**. Вы можете свободно использовать, модифицировать, форкать и распространять этот код.
