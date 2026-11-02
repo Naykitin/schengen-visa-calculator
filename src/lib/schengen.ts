@@ -279,20 +279,33 @@ export function simulateTrip(
   existingTrips: Trip[],
   proposedEntryDate: string,
   proposedExitDate: string,
-  excludeTripId?: string
+  excludeTripId?: string,
+  prebuiltDaysMap?: Map<string, string>
 ): SimulationResult {
-  const filteredTrips = excludeTripId
-    ? existingTrips.filter(t => t.id !== excludeTripId)
-    : existingTrips
+  let daysMap: Map<string, string>
 
-  const proposedTrip: Trip = {
-    id: '__simulation__',
-    entryDate: proposedEntryDate,
-    exitDate: proposedExitDate,
+  if (prebuiltDaysMap && !excludeTripId) {
+    daysMap = new Map(prebuiltDaysMap)
+    let d = fromDateString(proposedEntryDate)
+    const end = fromDateString(proposedExitDate)
+    while (!isAfter(d, end)) {
+      daysMap.set(toDateString(d), '__simulation__')
+      d = addDays(d, 1)
+    }
+  } else {
+    const filteredTrips = excludeTripId
+      ? existingTrips.filter(t => t.id !== excludeTripId)
+      : existingTrips
+
+    const proposedTrip: Trip = {
+      id: '__simulation__',
+      entryDate: proposedEntryDate,
+      exitDate: proposedExitDate,
+    }
+
+    const allTrips = [...filteredTrips, proposedTrip]
+    daysMap = buildSchengenDaysMap(allTrips)
   }
-
-  const allTrips = [...filteredTrips, proposedTrip]
-  const daysMap = buildSchengenDaysMap(allTrips)
 
   const start = fromDateString(proposedEntryDate)
   const end = fromDateString(proposedExitDate)
@@ -366,6 +379,7 @@ export function findEarliestEntryDate(
     return { found: false }
   }
 
+  const existingDaysMap = buildSchengenDaysMap(trips)
   let candidateDate = fromDateString(startDateStr)
   const limitDate = addDays(candidateDate, 365)
 
@@ -373,7 +387,7 @@ export function findEarliestEntryDate(
     const entryStr = toDateString(candidateDate)
     const exitStr = toDateString(addDays(candidateDate, durationDays - 1))
 
-    const sim = simulateTrip(trips, entryStr, exitStr)
+    const sim = simulateTrip(trips, entryStr, exitStr, undefined, existingDaysMap)
     if (sim.isValid) {
       return {
         found: true,

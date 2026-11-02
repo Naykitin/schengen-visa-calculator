@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import {
   AlertCircle,
   Calendar,
@@ -47,20 +47,19 @@ export const PlannerView: React.FC<PlannerViewProps> = ({
     toDateString(new Date())
   )
 
-  // Earliest search calculation
-  const earliestResult = findEarliestEntryDate(
-    trips,
-    desiredDays,
-    searchFromDate
-  )
+  // Earliest search calculation (memoized to keep main thread at 60fps)
+  const earliestResult = useMemo(() => {
+    if (mode !== 'find-earliest') return { found: false }
+    return findEarliestEntryDate(trips, desiredDays, searchFromDate)
+  }, [mode, trips, desiredDays, searchFromDate])
 
-  // Specific dates calculation
+  // Specific dates calculation (memoized)
   const isDateOrderValid = checkEntry && checkExit && checkEntry <= checkExit
   const checkDuration = isDateOrderValid ? getTripDuration(checkEntry, checkExit) : 0
-  const checkSimulation =
-    isDateOrderValid && checkDuration > 0
-      ? simulateTrip(trips, checkEntry, checkExit)
-      : null
+  const checkSimulation = useMemo(() => {
+    if (mode !== 'check-dates' || !isDateOrderValid || checkDuration <= 0) return null
+    return simulateTrip(trips, checkEntry, checkExit)
+  }, [mode, isDateOrderValid, checkDuration, trips, checkEntry, checkExit])
 
   return (
     <div className="space-y-4">
