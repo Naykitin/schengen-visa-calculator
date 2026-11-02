@@ -1,10 +1,11 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
   AlertTriangle,
   Calendar as CalendarIcon,
   Clock,
   Compass,
   Sparkles,
+  X,
 } from 'lucide-react'
 import type { SchengenSummary } from '../lib/schengen'
 import type { Language, TranslationDictionary } from '../lib/i18n'
@@ -28,6 +29,7 @@ export const StatusCard: React.FC<StatusCardProps> = ({
   onReferenceDateChange,
   onResetReferenceDate,
 }) => {
+  const [isOverstayDismissed, setIsOverstayDismissed] = useState(false)
   const percentUsed = Math.min(100, Math.round((summary.daysUsedInWindow / 90) * 100))
   const isToday = referenceDate === new Date().toISOString().slice(0, 10)
   const dateLocale = lang === 'ru' ? ru : enUS
@@ -75,16 +77,26 @@ export const StatusCard: React.FC<StatusCardProps> = ({
         />
       </div>
 
-      {/* Overstay alert banner */}
-      {summary.hasOverstay && (
-        <div className="mb-4 p-3 rounded-2xl bg-rose-500/15 border border-rose-500/30 flex items-start gap-3 text-rose-200">
-          <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
-          <div className="text-xs">
-            <p className="font-bold text-rose-300">{t.overstayWarningTitle}</p>
-            <p className="text-rose-200/80 mt-0.5">
-              {t.overstayWarningDesc(summary.firstOverstayDate)}
-            </p>
+      {/* Overstay alert banner with Dismiss button */}
+      {summary.hasOverstay && !isOverstayDismissed && (
+        <div className="mb-4 p-3 rounded-2xl bg-rose-500/15 border border-rose-500/30 flex items-start justify-between gap-3 text-rose-200">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+            <div className="text-xs">
+              <p className="font-bold text-rose-300">{t.overstayWarningTitle}</p>
+              <p className="text-rose-200/80 mt-0.5">
+                {t.overstayWarningDesc(summary.firstOverstayDate)}
+              </p>
+            </div>
           </div>
+          <button
+            onClick={() => setIsOverstayDismissed(true)}
+            className="p-1 rounded-lg text-rose-400 hover:text-rose-100 hover:bg-rose-500/30 transition-colors shrink-0"
+            title="Dismiss"
+            aria-label="Close warning"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
 
