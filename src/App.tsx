@@ -487,7 +487,7 @@ export function App() {
       />
 
       {/* Main Layout Container (Handles Mobile, Tablet, Desktop & Dual-Screen) */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-3.5 sm:px-6 pt-5 sm:pt-7 pb-8 dual-screen-layout">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-3.5 sm:px-6 pt-5 sm:pt-8 pb-8 dual-screen-layout">
         
         {/* =========================================================================
             DESKTOP & DUAL-SCREEN LAYOUT (>= 1024px or Foldable Dual-Screen)
