@@ -55,24 +55,31 @@ export const StatusCard: React.FC<StatusCardProps> = ({
   const isResidentMode = activeProfile.mode === 'eu_resident'
   const countryObj = EU_COUNTRIES.find((c) => c.code === (activeProfile.country || 'ES')) || EU_COUNTRIES[0]
 
+  // Top-level hooks (must never be called conditionally)
+  const resSummary = useMemo(
+    () =>
+      isResidentMode
+        ? calculateResidenceYearSummary(
+            activeProfile.trips,
+            selectedYear,
+            activeProfile.taxTargetDays || 183
+          )
+        : null,
+    [isResidentMode, activeProfile.trips, selectedYear, activeProfile.taxTargetDays]
+  )
+
+  const permSummary = useMemo(
+    () =>
+      isResidentMode
+        ? calculatePermanentResidenceSummary(activeProfile.trips, referenceDate)
+        : null,
+    [isResidentMode, activeProfile.trips, referenceDate]
+  )
+
   // =========================================================================
   // EU RESIDENT & TAX TRACKER VIEW
   // =========================================================================
-  if (isResidentMode) {
-    const resSummary = useMemo(
-      () =>
-        calculateResidenceYearSummary(
-          activeProfile.trips,
-          selectedYear,
-          activeProfile.taxTargetDays || 183
-        ),
-      [activeProfile.trips, selectedYear, activeProfile.taxTargetDays]
-    )
-    const permSummary = useMemo(
-      () => calculatePermanentResidenceSummary(activeProfile.trips, referenceDate),
-      [activeProfile.trips, referenceDate]
-    )
-
+  if (isResidentMode && resSummary && permSummary) {
     const taxProgressPercent = Math.min(
       100,
       Math.round((resSummary.daysInside / resSummary.taxTargetDays) * 100)
