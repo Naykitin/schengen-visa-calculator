@@ -26,6 +26,25 @@ export const onRequestOptions: PagesFunction = async () => {
   })
 }
 
+let tableEnsured = false
+
+async function ensureVaultsTable(db: D1Database): Promise<void> {
+  if (tableEnsured) return
+  try {
+    await db.prepare(
+      `CREATE TABLE IF NOT EXISTS vaults (
+        sync_key TEXT PRIMARY KEY,
+        payload TEXT NOT NULL,
+        updated_at INTEGER NOT NULL,
+        created_at INTEGER NOT NULL
+      )`
+    ).run()
+    tableEnsured = true
+  } catch (err) {
+    console.warn('Auto table create error:', err)
+  }
+}
+
 // GET /api/sync/:key - Retrieve stored vault
 export const onRequestGet: PagesFunction<Env> = async (context) => {
   const { params, env } = context
@@ -46,6 +65,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
   }
 
   try {
+    await ensureVaultsTable(env.DB)
     const row = await env.DB.prepare(
       'SELECT payload, updated_at FROM vaults WHERE sync_key = ?'
     )
@@ -94,6 +114,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
   }
 
   try {
+    await ensureVaultsTable(env.DB)
     const bodyText = await request.text()
     if (bodyText.length > 512 * 1024) {
       // 512 KB payload size limit
