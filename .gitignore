@@ -1,28 +1,71 @@
+# ==============================================================================
 # Dependencies
+# ==============================================================================
 node_modules/
 .pnp
 .pnp.js
 
-# Production build outputs
+# ==============================================================================
+# Production Build Outputs
+# ==============================================================================
 dist/
 build/
 out/
 
-# Environment files
+# ==============================================================================
+# Environment Files & Secrets (Never commit secrets to git!)
+# ==============================================================================
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+.npmrc
+.netrc
 
+# Private Keys & Certificates
+*.pem
+*.key
+*.cert
+*.crt
+*.pfx
+*.p12
+id_rsa*
+id_ed25519*
+
+# ==============================================================================
+# Cloudflare & Wrangler Local State
+# ==============================================================================
+.wrangler/
+.mf/
+wrangler.state/
+
+# Local SQLite databases & dumps (do not commit local test databases)
+*.db
+*.sqlite
+*.sqlite3
+*.d1
+*.dump
+*.bak
+
+# Personal test backups (e.g. if user exports trips into project directory)
+schengen-*.json
+*-backup-*.json
+
+# ==============================================================================
 # Logs
+# ==============================================================================
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Editor directories and files
+# ==============================================================================
+# Editor & OS Specific Files
+# ==============================================================================
 .vscode/*
 !.vscode/extensions.json
 .idea/
@@ -31,14 +74,12 @@ lerna-debug.log*
 *.njsproj
 *.sln
 *.sw?
-
-# OS generated files
 .DS_Store
 Thumbs.db
+ehthumbs.db
 
-# Cloudflare
-.wrangler/
-
-# Capacitor / Mobile builds
+# ==============================================================================
+# Mobile Native Builds (Capacitor / Cordova)
+# ==============================================================================
 android/
 ios/
