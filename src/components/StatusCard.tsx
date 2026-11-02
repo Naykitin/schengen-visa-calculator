@@ -29,6 +29,7 @@ interface StatusCardProps {
   onReferenceDateChange: (date: string) => void
   onResetReferenceDate: () => void
   onToggleProfileMode?: () => void
+  onUpdateCountry?: (countryCode: string) => void
 }
 
 export const StatusCard: React.FC<StatusCardProps> = ({
@@ -40,6 +41,7 @@ export const StatusCard: React.FC<StatusCardProps> = ({
   onReferenceDateChange,
   onResetReferenceDate,
   onToggleProfileMode,
+  onUpdateCountry,
 }) => {
   const [isOverstayDismissed, setIsOverstayDismissed] = useState(false)
   const isToday = referenceDate === new Date().toISOString().slice(0, 10)
@@ -75,14 +77,22 @@ export const StatusCard: React.FC<StatusCardProps> = ({
         <div className="absolute -right-16 -top-16 w-52 h-52 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -left-16 -bottom-16 w-52 h-52 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Top Header Row: Mode Badge & Year Switcher */}
+        {/* Top Header Row: Country Selector & Year Switcher */}
         <div className="flex flex-wrap items-center justify-between gap-2 pb-4 mb-4 border-b border-slate-800/80">
           <div className="flex items-center gap-2">
-            <span className="text-base">{countryObj.flag}</span>
-            <span className="text-xs font-bold text-slate-200">
-              {t.residentHeaderBadge(countryObj.name)}
-            </span>
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            <select
+              value={activeProfile.country || 'ES'}
+              onChange={(e) => onUpdateCountry?.(e.target.value)}
+              className="bg-slate-950/90 border border-emerald-500/40 hover:border-emerald-400 text-emerald-300 text-xs font-bold rounded-xl px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer transition-all shadow-sm"
+              title={t.homeCountryLabel}
+            >
+              {EU_COUNTRIES.map((c) => (
+                <option key={c.code} value={c.code} className="bg-slate-900 text-slate-200">
+                  {c.flag} {c.name} ({c.code})
+                </option>
+              ))}
+            </select>
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 whitespace-nowrap">
               Pan-European 183d
             </span>
           </div>

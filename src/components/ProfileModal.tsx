@@ -115,7 +115,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             const isActive = profile.id === data.activeProfileId
             const colorOption = PROFILE_COLORS.find((c) => c.id === profile.color) || PROFILE_COLORS[0]
             const isResident = profile.mode === 'eu_resident'
-            const countryObj = EU_COUNTRIES.find((c) => c.code === (profile.country || 'ES')) || EU_COUNTRIES[0]
 
             return (
               <div
@@ -179,10 +178,21 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 >
                   <div className="flex items-center gap-1.5">
                     {isResident ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 text-[11px] font-medium">
-                        <span>{countryObj.flag}</span>
-                        <span>{t.residentHeaderBadge(countryObj.name)}</span>
-                      </span>
+                      <select
+                        value={profile.country || 'ES'}
+                        onChange={(e) => {
+                          onUpdateProfile(profile.id, { country: e.target.value })
+                          triggerHaptic('light')
+                        }}
+                        className="bg-slate-900 border border-emerald-500/40 hover:border-emerald-400 text-emerald-300 text-[11px] font-semibold rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                        title={t.homeCountryLabel}
+                      >
+                        {EU_COUNTRIES.map((c) => (
+                          <option key={c.code} value={c.code} className="bg-slate-900 text-slate-200">
+                            {c.flag} {c.name}
+                          </option>
+                        ))}
+                      </select>
                     ) : (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-300 border border-blue-500/30 text-[11px] font-medium">
                         <span>🇪🇺</span>

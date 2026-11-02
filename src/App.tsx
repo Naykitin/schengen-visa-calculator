@@ -455,6 +455,7 @@ export function App() {
                   country: activeProfile.country || 'ES',
                 })
               }
+              onUpdateCountry={(code) => handleUpdateProfile(activeProfile.id, { country: code })}
             />
 
             <TripList
@@ -550,6 +551,7 @@ export function App() {
                 country: activeProfile.country || 'ES',
               })
             }
+            onUpdateCountry={(code) => handleUpdateProfile(activeProfile.id, { country: code })}
           />
 
           {/* Tablet & Mobile Tab Switcher */}
