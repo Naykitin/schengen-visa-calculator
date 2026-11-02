@@ -1,7 +1,7 @@
 /**
  * Web Vibration API helper for touch feedback on mobile devices
  */
-export type HapticType = 'light' | 'medium' | 'heavy' | 'warning' | 'error'
+export type HapticType = 'light' | 'medium' | 'heavy' | 'warning' | 'error' | 'success'
 
 export function triggerHaptic(type: HapticType = 'light'): void {
   if (typeof window === 'undefined' || !navigator.vibrate) return
@@ -16,6 +16,9 @@ export function triggerHaptic(type: HapticType = 'light'): void {
         break
       case 'heavy':
         navigator.vibrate(40)
+        break
+      case 'success':
+        navigator.vibrate([15, 30, 20])
         break
       case 'warning':
         navigator.vibrate([30, 40, 30])

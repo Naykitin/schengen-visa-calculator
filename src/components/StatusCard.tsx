@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import {
   AlertTriangle,
   Calendar as CalendarIcon,
@@ -59,12 +59,19 @@ export const StatusCard: React.FC<StatusCardProps> = ({
   // EU RESIDENT & TAX TRACKER VIEW
   // =========================================================================
   if (isResidentMode) {
-    const resSummary = calculateResidenceYearSummary(
-      activeProfile.trips,
-      selectedYear,
-      activeProfile.taxTargetDays || 183
+    const resSummary = useMemo(
+      () =>
+        calculateResidenceYearSummary(
+          activeProfile.trips,
+          selectedYear,
+          activeProfile.taxTargetDays || 183
+        ),
+      [activeProfile.trips, selectedYear, activeProfile.taxTargetDays]
     )
-    const permSummary = calculatePermanentResidenceSummary(activeProfile.trips, referenceDate)
+    const permSummary = useMemo(
+      () => calculatePermanentResidenceSummary(activeProfile.trips, referenceDate),
+      [activeProfile.trips, referenceDate]
+    )
 
     const taxProgressPercent = Math.min(
       100,

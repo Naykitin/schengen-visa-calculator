@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react'
-import { AlertCircle, Plane, X } from 'lucide-react'
+import React, { useState, useEffect, useMemo } from 'react'
+import { AlertCircle, AlertTriangle, Check, Clock, Plane, RefreshCw, X } from 'lucide-react'
 import type { Trip } from '../lib/schengen'
 import type { Language, TranslationDictionary } from '../lib/i18n'
 import { getTripDuration, simulateTrip } from '../lib/schengen'
+import { triggerHaptic } from '../lib/haptics'
 
 interface TripModalProps {
   isOpen: boolean
@@ -33,6 +34,8 @@ export const TripModal: React.FC<TripModalProps> = ({
   const [notes, setNotes] = useState('')
   const [isPlanned, setIsPlanned] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
+  const [isSavedSuccess, setIsSavedSuccess] = useState(false)
 
   useEffect(() => {
     if (initialTrip) {
@@ -50,6 +53,8 @@ export const TripModal: React.FC<TripModalProps> = ({
       setIsPlanned(false)
     }
     setError(null)
+    setIsSaving(false)
+    setIsSavedSuccess(false)
   }, [initialTrip, isOpen])
 
   // Close on Escape key
@@ -63,16 +68,19 @@ export const TripModal: React.FC<TripModalProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, onClose])
 
+  // Live simulation & calculation memoization (zero UI freeze)
+  const isDateOrderValid = entryDate && exitDate && entryDate <= exitDate
+  const duration = useMemo(() => {
+    return isDateOrderValid ? getTripDuration(entryDate, exitDate) : 0
+  }, [isDateOrderValid, entryDate, exitDate])
+
+  const simulation = useMemo(() => {
+    return !isResidentMode && isDateOrderValid
+      ? simulateTrip(existingTrips, entryDate, exitDate, initialTrip?.id)
+      : null
+  }, [isResidentMode, isDateOrderValid, existingTrips, entryDate, exitDate, initialTrip?.id])
+
   if (!isOpen) return null
-
-  // Live simulation for feedback
-  const duration = entryDate && exitDate && entryDate <= exitDate
-    ? getTripDuration(entryDate, exitDate)
-    : 0
-
-  const simulation = !isResidentMode && entryDate && exitDate && entryDate <= exitDate
-    ? simulateTrip(existingTrips, entryDate, exitDate, initialTrip?.id)
-    : null
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -87,6 +95,9 @@ export const TripModal: React.FC<TripModalProps> = ({
       return
     }
 
+    setIsSaving(true)
+    triggerHaptic('medium')
+
     const trip: Trip = {
       id: initialTrip?.id || `trip_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       entryDate,
@@ -96,7 +107,16 @@ export const TripModal: React.FC<TripModalProps> = ({
       isPlanned,
     }
 
-    onSave(trip)
+    // Micro-delay gives the user immediate visual confirmation of the save action
+    setTimeout(() => {
+      setIsSaving(false)
+      setIsSavedSuccess(true)
+      triggerHaptic('success')
+      setTimeout(() => {
+        onSave(trip)
+        setIsSavedSuccess(false)
+      }, 250)
+    }, 200)
   }
 
   const modalHeading = isResidentMode
@@ -203,19 +223,58 @@ export const TripModal: React.FC<TripModalProps> = ({
 
           {/* Duration Badge & Live Warning */}
           {duration > 0 && (
-            <div className="p-3 bg-slate-950/70 border border-slate-800/80 rounded-xl flex items-center justify-between text-xs">
-              <span className="text-slate-400">
-                {isResidentMode ? 'Total absence duration:' : 'Stay duration:'}
+            <div className="p-3 bg-slate-950/70 border border-slate-800/80 rounded-xl flex items-center justify-between text-xs animate-fade-in transition-all">
+              <span className="text-slate-400 flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                {isResidentMode
+                  ? lang === 'ru'
+                    ? 'Срок отсутствия:'
+                    : lang === 'de'
+                    ? 'Abwesenheitsdauer:'
+                    : lang === 'fr'
+                    ? 'Durée de l\'absence :'
+                    : lang === 'pl'
+                    ? 'Czas nieobecności:'
+                    : 'Absence duration:'
+                  : lang === 'ru'
+                  ? 'Длительность пребывания:'
+                  : 'Stay duration:'}
               </span>
-              <span className="font-bold text-slate-100">
+              <span className="font-bold text-slate-100 flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-blue-500/15 border border-blue-500/30 text-blue-300">
+                <Check className="w-3 h-3 text-emerald-400" />
                 {isResidentMode ? t.abroadDuration(duration) : t.durationDays(duration)}
               </span>
             </div>
           )}
 
+          {/* EU Resident Mode: Alert if single trip exceeds 6 continuous months (> 183 days) */}
+          {isResidentMode && duration > 183 && (
+            <div className="p-3.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-xs text-amber-200 animate-fade-in space-y-1">
+              <div className="flex items-center gap-2 font-bold text-amber-300">
+                <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                <span>
+                  {lang === 'ru'
+                    ? 'Внимание: выезд длится более 6 месяцев (183 дней)!'
+                    : lang === 'de'
+                    ? 'Achtung: Einzelabwesenheit überschreitet 6 Monate (183 Tage)!'
+                    : lang === 'fr'
+                    ? 'Attention : le séjour dépasse 6 mois consécutifs (183 jours) !'
+                    : lang === 'pl'
+                    ? 'Uwaga: wyjazd trwa dłużej niż 6 miesięcy (183 dni)!'
+                    : 'Warning: Single absence exceeds 6 continuous months (183 days)!'}
+                </span>
+              </div>
+              <p className="text-[11px] text-amber-300/80 leading-relaxed">
+                {lang === 'ru'
+                  ? 'Непрерывное отсутствие более 6 месяцев подряд может поставить под угрозу статус ПМЖ ЕС (Директива 2003/109/EC) или национальный вид на жительство.'
+                  : 'Continuous absence exceeding 6 consecutive months can jeopardize EU long-term residency status (Directive 2003/109/EC).'}
+              </p>
+            </div>
+          )}
+
           {/* Overstay Warning in Schengen mode */}
           {simulation && !simulation.isValid && (
-            <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-xs text-rose-200">
+            <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-xs text-rose-200 animate-fade-in">
               <p className="font-bold">{t.overstayAlert}</p>
               {simulation.firstViolationDate && (
                 <p className="mt-0.5 text-rose-300">
@@ -286,15 +345,53 @@ export const TripModal: React.FC<TripModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 px-4 rounded-xl border border-slate-700 text-xs font-semibold text-slate-300 hover:bg-slate-800 active:scale-95 transition-all min-h-[44px]"
+              disabled={isSaving || isSavedSuccess}
+              className="flex-1 py-2.5 px-4 rounded-xl border border-slate-700 text-xs font-semibold text-slate-300 hover:bg-slate-800 active:scale-95 transition-all min-h-[44px] disabled:opacity-50"
             >
               {t.cancelBtn}
             </button>
             <button
               type="submit"
-              className="flex-1 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-lg shadow-blue-600/30 active:scale-95 transition-all min-h-[44px]"
+              disabled={isSaving || isSavedSuccess}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold text-white shadow-lg transition-all min-h-[44px] ${
+                isSavedSuccess
+                  ? 'bg-emerald-600 shadow-emerald-600/30'
+                  : 'bg-blue-600 hover:bg-blue-500 shadow-blue-600/30 active:scale-95'
+              } disabled:opacity-90`}
             >
-              {t.saveBtn}
+              {isSaving ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                  <span>
+                    {lang === 'ru'
+                      ? 'Сохранение...'
+                      : lang === 'de'
+                      ? 'Speichern...'
+                      : lang === 'fr'
+                      ? 'Enregistrement...'
+                      : lang === 'pl'
+                      ? 'Zapisywanie...'
+                      : 'Saving...'}
+                  </span>
+                </>
+              ) : isSavedSuccess ? (
+                <>
+                  <Check className="w-4 h-4 text-white" />
+                  <span>
+                    {lang === 'ru'
+                      ? 'Сохранено!'
+                      : lang === 'de'
+                      ? 'Gespeichert!'
+                      : lang === 'fr'
+                      ? 'Enregistré !'
+                      : lang === 'pl'
+                      ? 'Zapisano!'
+                      : 'Saved!'}
+                  </span>
+                </>
+              ) : (
+                <span>{t.saveBtn}</span>
+              )}
             </button>
           </div>
         </form>

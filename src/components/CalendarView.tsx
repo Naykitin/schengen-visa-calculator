@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useMemo } from 'react'
 import {
   ChevronLeft,
   ChevronRight,
@@ -48,7 +48,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   const touchStartX = useRef<number | null>(null)
 
   const dateLocale = getDateLocale(lang)
-  const daysMap = buildSchengenDaysMap(trips)
+  const daysMap = useMemo(() => buildSchengenDaysMap(trips), [trips])
 
   const monthStart = startOfMonth(currentMonth)
   const monthEnd = endOfMonth(monthStart)
