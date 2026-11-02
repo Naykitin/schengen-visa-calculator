@@ -2,7 +2,7 @@ import React from 'react'
 import { Cloud, Download, Globe, HelpCircle, Plus, RefreshCw, User, WifiOff } from 'lucide-react'
 import type { Language, TranslationDictionary } from '../lib/i18n'
 import type { Profile } from '../lib/storage'
-import { PROFILE_COLORS } from '../lib/storage'
+import { PROFILE_COLORS, EU_COUNTRIES } from '../lib/storage'
 
 interface HeaderProps {
   lang: Language
@@ -36,6 +36,10 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenInfoModal,
 }) => {
   const profileColor = PROFILE_COLORS.find((c) => c.id === activeProfile.color) || PROFILE_COLORS[0]
+  const isResident = activeProfile.mode === 'eu_resident'
+  const countryFlag = isResident
+    ? (EU_COUNTRIES.find((c) => c.code === (activeProfile.country || 'ES'))?.flag || '🇪🇸')
+    : '🇪🇺'
 
   return (
     <header className="sticky top-0 z-30 bg-slate-950/85 backdrop-blur-md border-b border-slate-800 safe-top px-3.5 sm:px-6 py-3 sm:py-3.5 transition-all">
@@ -64,6 +68,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <span className={`w-2.5 h-2.5 rounded-full ${profileColor.bg} inline-block`} />
             <span className="font-semibold max-w-[100px] truncate">{activeProfile.name}</span>
+            <span className="text-xs">{countryFlag}</span>
             <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
           </button>
         </div>
@@ -88,59 +93,59 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </div>
 
-        {/* Right: Actions */}
-        <div className="flex items-center gap-1 sm:gap-2">
-          {/* Cloudflare Sync Button */}
+        {/* Right: Actions & Tools */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Cloudflare Sync status button */}
           <button
             onClick={onOpenSyncModal}
-            className={`min-w-[36px] sm:min-w-[40px] min-h-[36px] sm:min-h-[40px] flex items-center justify-center rounded-xl hover:bg-slate-800/60 active:scale-95 transition-all relative ${
-              isSyncActive ? 'text-indigo-400' : 'text-slate-400 hover:text-white'
+            className={`p-2 rounded-xl border text-xs font-medium transition-all active:scale-95 min-h-[36px] flex items-center gap-1.5 ${
+              isSyncActive
+                ? 'bg-blue-500/10 text-blue-400 border-blue-500/30'
+                : 'text-slate-400 hover:text-white border-transparent hover:bg-slate-900'
             }`}
-            title={t.syncModalTitle}
-            aria-label={t.syncModalTitle}
+            title={isSyncActive ? t.syncActiveBadge : t.syncDisabledBadge}
           >
-            <Cloud className="w-5 h-5" />
-            {isSyncActive && (
-              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-slate-950" />
-            )}
+            <Cloud className="w-4 h-4" />
+            <span className="hidden md:inline">{isSyncActive ? 'Sync ON' : 'Sync'}</span>
           </button>
 
-          {/* Language Switcher */}
+          {/* Language Toggle */}
           <button
             onClick={onToggleLanguage}
-            className="min-w-[36px] sm:min-w-[40px] min-h-[36px] sm:min-h-[40px] px-2 flex items-center justify-center gap-1 text-xs font-bold text-slate-300 hover:text-white rounded-xl hover:bg-slate-800/70 border border-slate-800 active:scale-95 transition-all"
-            title="Switch Language / Сменить язык"
-            aria-label="Switch Language"
+            className="flex items-center gap-1.5 py-1 px-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-900 transition-all min-h-[36px]"
+            title="Toggle Language (RU / EN)"
           >
-            <Globe className="w-4 h-4 text-blue-400" />
-            <span className="uppercase">{lang}</span>
+            <Globe className="w-3.5 h-3.5 text-slate-400" />
+            <span>{lang.toUpperCase()}</span>
           </button>
 
+          {/* Backup & Data Modal */}
           <button
             onClick={onOpenBackupModal}
-            className="min-w-[36px] sm:min-w-[40px] min-h-[36px] sm:min-h-[40px] flex items-center justify-center text-slate-400 hover:text-white rounded-xl hover:bg-slate-800/60 active:scale-95 transition-all"
+            className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-900 transition-colors min-h-[36px]"
             title={t.backupAndExport}
-            aria-label={t.backupAndExport}
           >
-            <Download className="w-5 h-5" />
-          </button>
-          
-          <button
-            onClick={onOpenInfoModal}
-            className="min-w-[36px] sm:min-w-[40px] min-h-[36px] sm:min-h-[40px] flex items-center justify-center text-slate-400 hover:text-white rounded-xl hover:bg-slate-800/60 active:scale-95 transition-all"
-            title={t.aboutRule}
-            aria-label={t.aboutRule}
-          >
-            <HelpCircle className="w-5 h-5" />
+            <Download className="w-4 h-4" />
           </button>
 
+          {/* Info Modal */}
+          <button
+            onClick={onOpenInfoModal}
+            className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-900 transition-colors min-h-[36px]"
+            title={t.aboutRule}
+          >
+            <HelpCircle className="w-4 h-4" />
+          </button>
+
+          {/* Primary Action Button: Add Trip */}
           <button
             onClick={onOpenAddModal}
-            className="min-h-[36px] sm:min-h-[40px] flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-3 sm:px-3.5 py-2 rounded-xl shadow-md shadow-blue-600/30 active:scale-95 transition-all border border-blue-400/20"
+            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow-lg shadow-blue-600/30 active:scale-95 transition-all min-h-[36px]"
           >
             <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">{t.addTrip}</span>
-            <span className="sm:hidden">{t.trip}</span>
+            <span className="hidden sm:inline">
+              {isResident ? t.logAbroadTripBtn : t.addTrip}
+            </span>
           </button>
         </div>
       </div>

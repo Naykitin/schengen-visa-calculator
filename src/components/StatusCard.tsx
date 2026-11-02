@@ -2,39 +2,246 @@ import React, { useState } from 'react'
 import {
   AlertTriangle,
   Calendar as CalendarIcon,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   Compass,
+  Home,
+  Plane,
+  ShieldCheck,
   Sparkles,
   X,
 } from 'lucide-react'
 import type { SchengenSummary } from '../lib/schengen'
 import type { Language, TranslationDictionary } from '../lib/i18n'
+import type { Profile } from '../lib/storage'
+import { EU_COUNTRIES } from '../lib/storage'
+import { calculateResidenceYearSummary, calculatePermanentResidenceSummary } from '../lib/residence'
 import { format, parseISO } from 'date-fns'
 import { ru, enUS } from 'date-fns/locale'
 
 interface StatusCardProps {
   summary: SchengenSummary
   referenceDate: string
+  activeProfile: Profile
   lang: Language
   t: TranslationDictionary
   onReferenceDateChange: (date: string) => void
   onResetReferenceDate: () => void
+  onToggleProfileMode?: () => void
 }
 
 export const StatusCard: React.FC<StatusCardProps> = ({
   summary,
   referenceDate,
+  activeProfile,
   lang,
   t,
   onReferenceDateChange,
   onResetReferenceDate,
+  onToggleProfileMode,
 }) => {
   const [isOverstayDismissed, setIsOverstayDismissed] = useState(false)
-  const percentUsed = Math.min(100, Math.round((summary.daysUsedInWindow / 90) * 100))
   const isToday = referenceDate === new Date().toISOString().slice(0, 10)
   const dateLocale = lang === 'ru' ? ru : enUS
+  const formattedRefDate = format(parseISO(referenceDate), 'd MMMM yyyy', { locale: dateLocale })
 
-  // Status color styling
+  // Year state for EU Resident mode (defaults to year of referenceDate)
+  const refYear = parseISO(referenceDate).getFullYear()
+  const [selectedYear, setSelectedYear] = useState<number>(refYear)
+
+  const isResidentMode = activeProfile.mode === 'eu_resident'
+  const countryObj = EU_COUNTRIES.find((c) => c.code === (activeProfile.country || 'ES')) || EU_COUNTRIES[0]
+
+  // =========================================================================
+  // EU RESIDENT & TAX TRACKER VIEW
+  // =========================================================================
+  if (isResidentMode) {
+    const resSummary = calculateResidenceYearSummary(
+      activeProfile.trips,
+      selectedYear,
+      activeProfile.taxTargetDays || 183
+    )
+    const permSummary = calculatePermanentResidenceSummary(activeProfile.trips, referenceDate)
+
+    const taxProgressPercent = Math.min(
+      100,
+      Math.round((resSummary.daysInside / resSummary.taxTargetDays) * 100)
+    )
+
+    return (
+      <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 shadow-xl relative overflow-hidden backdrop-blur-sm">
+        {/* Ambient glow effects */}
+        <div className="absolute -right-16 -top-16 w-52 h-52 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -left-16 -bottom-16 w-52 h-52 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Top Header Row: Mode Badge & Year Switcher */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pb-4 mb-4 border-b border-slate-800/80">
+          <div className="flex items-center gap-2">
+            <span className="text-base">{countryObj.flag}</span>
+            <span className="text-xs font-bold text-slate-200">
+              {t.residentHeaderBadge(countryObj.name)}
+            </span>
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              183d Tax
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Year selector buttons */}
+            <div className="flex items-center bg-slate-950/80 border border-slate-800 rounded-xl px-1.5 py-0.5">
+              <button
+                type="button"
+                onClick={() => setSelectedYear((y) => y - 1)}
+                className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
+                title="Previous Year"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+              <span className="text-xs font-bold text-slate-200 px-2">
+                {selectedYear}
+              </span>
+              <button
+                type="button"
+                onClick={() => setSelectedYear((y) => y + 1)}
+                className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
+                title="Next Year"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {onToggleProfileMode && (
+              <button
+                type="button"
+                onClick={onToggleProfileMode}
+                className="text-[11px] text-blue-400 hover:text-blue-300 underline underline-offset-2 ml-1"
+                title="Switch mode"
+              >
+                Switch to Schengen 90/180
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Warning if any single trip exceeded 6 months */}
+        {resSummary.hasSingleTripViolation && (
+          <div className="mb-4 p-3 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-start gap-3 text-amber-200">
+            <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+            <div className="text-xs">
+              <p className="font-bold text-amber-300">{t.singleTripViolationAlert}</p>
+              <p className="text-amber-200/80 mt-0.5">
+                Longest absence: {resSummary.longestSingleTripDays} consecutive days.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Primary Stats Blocks for Resident */}
+        <div className="grid grid-cols-2 gap-4 my-2">
+          {/* Days in Home Country */}
+          <div className="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 flex flex-col justify-between">
+            <div className="flex items-center justify-between text-slate-400 text-xs">
+              <span>{t.daysInCountry(countryObj.name)}</span>
+              <Home className="w-4 h-4 text-emerald-400" />
+            </div>
+            <div className="my-2">
+              <span className="text-4xl sm:text-5xl font-black tracking-tight text-white">
+                {resSummary.daysInside}
+              </span>
+              <span className="text-xs text-slate-400 ml-1.5 font-medium">
+                / {resSummary.totalDaysInYear}
+              </span>
+            </div>
+            <div className="text-[11px]">
+              {resSummary.isTaxResidentSecured ? (
+                <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 inline" />
+                  {t.taxRequirementMet(resSummary.taxTargetDays)}
+                </span>
+              ) : (
+                <span className="text-amber-400 font-medium">
+                  {t.taxDaysNeeded(resSummary.daysNeededForTax)}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Days Abroad (Absences) */}
+          <div className="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 flex flex-col justify-between">
+            <div className="flex items-center justify-between text-slate-400 text-xs">
+              <span>{t.daysOutsideCountry}</span>
+              <Plane className="w-4 h-4 text-blue-400" />
+            </div>
+            <div className="my-2">
+              <span className="text-4xl sm:text-5xl font-black tracking-tight text-slate-200">
+                {resSummary.daysOutside}
+              </span>
+              <span className="text-xs text-slate-400 ml-1.5 font-medium">{t.days}</span>
+            </div>
+            <div className="text-[11px] text-slate-300">
+              {resSummary.safeRemainingAbsenceDays > 0 ? (
+                <span className="text-blue-300">
+                  {t.safeRemainingAbroad(resSummary.safeRemainingAbsenceDays)}
+                </span>
+              ) : (
+                <span className="text-rose-400 font-semibold">
+                  {t.taxLimitExceeded}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* 183-Day Tax Milestone Progress Bar */}
+        <div className="mt-4">
+          <div className="flex justify-between items-center text-[11px] text-slate-400 mb-1.5 font-medium">
+            <span>{t.taxMilestone183} (Target: {resSummary.taxTargetDays} days)</span>
+            <span className={resSummary.isTaxResidentSecured ? 'text-emerald-400 font-bold' : 'text-slate-300'}>
+              {resSummary.daysInside} / {resSummary.taxTargetDays} days ({taxProgressPercent}%)
+            </span>
+          </div>
+          <div className="w-full bg-slate-800/80 h-3 rounded-full overflow-hidden p-0.5 border border-slate-700/50">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                resSummary.isTaxResidentSecured
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-400 shadow-md shadow-emerald-500/20'
+                  : 'bg-gradient-to-r from-amber-500 to-orange-500'
+              }`}
+              style={{ width: `${Math.min(100, Math.round((resSummary.daysInside / resSummary.totalDaysInYear) * 100))}%` }}
+            />
+          </div>
+        </div>
+
+        {/* 5-Year Permanent Residence (Larga Duración / Directive 2003/109/EC) Section */}
+        <div className="mt-4 p-3 bg-slate-950/60 border border-slate-800 rounded-2xl flex items-center justify-between text-xs">
+          <div>
+            <p className="font-semibold text-slate-200 flex items-center gap-1.5">
+              <span>🛡️</span> {t.permResidence5YearTitle}
+            </p>
+            <p className="text-slate-400 text-[11px] mt-0.5">
+              {t.permResidence5YearDesc(permSummary.totalAbsenceLast5Years, permSummary.fiveYearAbsenceLimitDays)}
+            </p>
+          </div>
+          <span
+            className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border ${
+              permSummary.has5YearOverstay
+                ? 'bg-rose-500/10 text-rose-300 border-rose-500/30'
+                : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
+            }`}
+          >
+            {permSummary.has5YearOverstay ? 'Exceeded' : 'Healthy'}
+          </span>
+        </div>
+      </div>
+    )
+  }
+
+  // =========================================================================
+  // SCHENGEN VISITOR (90/180) VIEW
+  // =========================================================================
+  const percentUsed = Math.min(100, Math.round((summary.daysUsedInWindow / 90) * 100))
+
   let statusBadgeColor = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
   let gaugeColor = 'from-blue-500 to-indigo-500'
   if (summary.daysUsedInWindow >= 90) {
@@ -44,8 +251,6 @@ export const StatusCard: React.FC<StatusCardProps> = ({
     statusBadgeColor = 'bg-amber-500/10 text-amber-400 border-amber-500/20'
     gaugeColor = 'from-amber-500 to-orange-500'
   }
-
-  const formattedRefDate = format(parseISO(referenceDate), 'd MMMM yyyy', { locale: dateLocale })
 
   return (
     <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 shadow-xl relative overflow-hidden backdrop-blur-sm">
@@ -69,12 +274,25 @@ export const StatusCard: React.FC<StatusCardProps> = ({
           )}
         </div>
 
-        <input
-          type="date"
-          value={referenceDate}
-          onChange={(e) => e.target.value && onReferenceDateChange(e.target.value)}
-          className="bg-slate-800/80 border border-slate-700 text-slate-200 text-xs rounded-xl px-2.5 py-1 focus:outline-none focus:border-blue-500 transition-colors"
-        />
+        <div className="flex items-center gap-2">
+          <input
+            type="date"
+            value={referenceDate}
+            onChange={(e) => e.target.value && onReferenceDateChange(e.target.value)}
+            className="bg-slate-800/80 border border-slate-700 text-slate-200 text-xs rounded-xl px-2.5 py-1 focus:outline-none focus:border-blue-500 transition-colors"
+          />
+
+          {onToggleProfileMode && (
+            <button
+              type="button"
+              onClick={onToggleProfileMode}
+              className="text-[11px] text-emerald-400 hover:text-emerald-300 underline underline-offset-2 ml-1"
+              title="Switch mode"
+            >
+              Switch to Resident
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Overstay alert banner with Dismiss button */}
