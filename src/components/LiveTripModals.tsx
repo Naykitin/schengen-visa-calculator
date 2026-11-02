@@ -91,31 +91,36 @@ export const StartOngoingTripModal: React.FC<StartOngoingTripModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-      <div className="w-full sm:max-w-md bg-slate-900 border border-slate-800 rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 shadow-2xl max-h-[92vh] overflow-y-auto">
+      <div className="fixed inset-0" onClick={onClose} aria-hidden="true" />
+      <div className="relative z-10 w-full sm:max-w-md bg-slate-900 border border-slate-800 rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[85dvh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-slide-up sm:animate-fade-in">
+        {/* Mobile Pull Bar Grabber */}
+        <div className="w-10 h-1.5 bg-slate-700/80 rounded-full mx-auto mt-2.5 mb-1 sm:hidden shrink-0" />
+
         {/* Header */}
-        <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-slate-800">
-          <div className="flex items-center gap-2.5">
-            <div className={`p-2 rounded-xl ${isResidentMode ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-blue-500/15 text-blue-400 border border-blue-500/30'}`}>
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-800 shrink-0">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className={`p-2 rounded-xl shrink-0 ${isResidentMode ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-blue-500/15 text-blue-400 border border-blue-500/30'}`}>
               <Plane className="w-5 h-5" />
             </div>
-            <div>
-              <h3 className="text-base font-bold text-white tracking-tight">
+            <div className="min-w-0">
+              <h3 className="text-base font-bold text-white tracking-tight truncate">
                 {isResidentMode ? t.quickStartAbroadTitle : t.quickStartSchengenTitle}
               </h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-400 truncate">
                 {isResidentMode ? t.quickStartAbroadDesc : t.quickStartSchengenDesc}
               </p>
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors"
+            className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors shrink-0 ml-2"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form id="start-ongoing-trip-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 overscroll-contain">
           {/* Destination Country Selection */}
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
@@ -203,25 +208,26 @@ export const StartOngoingTripModal: React.FC<StartOngoingTripModalProps> = ({
               className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-blue-500 transition-colors resize-none"
             />
           </div>
-
-          {/* Submit */}
-          <div className="flex items-center gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 py-2.5 px-4 rounded-xl border border-slate-700 text-xs font-semibold text-slate-300 hover:bg-slate-800 active:scale-95 transition-all min-h-[44px]"
-            >
-              {t.cancelBtn}
-            </button>
-            <button
-              type="submit"
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/30 active:scale-95 transition-all min-h-[44px]"
-            >
-              <Compass className="w-4 h-4" />
-              <span>{t.startTrackingBtn}</span>
-            </button>
-          </div>
         </form>
+
+        {/* Sticky Action Footer with Safe Bottom */}
+        <div className="shrink-0 p-4 sm:p-5 border-t border-slate-800/80 bg-slate-900/95 backdrop-blur-md pb-[max(1.25rem,calc(env(safe-area-inset-bottom,0px)+0.75rem))] flex items-center gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 py-2.5 px-4 rounded-xl border border-slate-700 text-xs font-semibold text-slate-300 hover:bg-slate-800 active:scale-95 transition-all min-h-[44px] cursor-pointer"
+          >
+            {t.cancelBtn}
+          </button>
+          <button
+            type="submit"
+            form="start-ongoing-trip-form"
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/30 active:scale-95 transition-all min-h-[44px] cursor-pointer"
+          >
+            <Compass className="w-4 h-4" />
+            <span>{t.startTrackingBtn}</span>
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -281,18 +287,22 @@ export const PickReturnDateModal: React.FC<PickReturnDateModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-      <div className="w-full sm:max-w-md bg-slate-900 border border-slate-800 rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 shadow-2xl">
+      <div className="fixed inset-0" onClick={onClose} aria-hidden="true" />
+      <div className="relative z-10 w-full sm:max-w-md bg-slate-900 border border-slate-800 rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[85dvh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-slide-up sm:animate-fade-in">
+        {/* Mobile Pull Bar Grabber */}
+        <div className="w-10 h-1.5 bg-slate-700/80 rounded-full mx-auto mt-2.5 mb-1 sm:hidden shrink-0" />
+
         {/* Header */}
-        <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-slate-800">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-blue-500/15 text-blue-400 border border-blue-500/30">
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-800 shrink-0">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="p-2 rounded-xl bg-blue-500/15 text-blue-400 border border-blue-500/30 shrink-0">
               <Calendar className="w-5 h-5" />
             </div>
-            <div>
-              <h3 className="text-base font-bold text-white tracking-tight">
+            <div className="min-w-0">
+              <h3 className="text-base font-bold text-white tracking-tight truncate">
                 {t.returnDateModalTitle}
               </h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-400 truncate">
                 {isResidentMode
                   ? lang === 'uk'
                     ? `Поїздка розпочалася: ${formattedEntry}`
@@ -302,14 +312,15 @@ export const PickReturnDateModal: React.FC<PickReturnDateModalProps> = ({
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors"
+            className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors shrink-0 ml-2"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form id="pick-return-date-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 overscroll-contain">
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1.5">
               {isResidentMode
@@ -354,24 +365,26 @@ export const PickReturnDateModal: React.FC<PickReturnDateModalProps> = ({
               className="w-full min-w-0 max-w-full block h-11 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
             />
           </div>
-
-          <div className="flex items-center gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 py-2.5 px-4 rounded-xl border border-slate-700 text-xs font-semibold text-slate-300 hover:bg-slate-800 active:scale-95 transition-all min-h-[44px]"
-            >
-              {t.cancelBtn}
-            </button>
-            <button
-              type="submit"
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/30 active:scale-95 transition-all min-h-[44px]"
-            >
-              <Check className="w-4 h-4" />
-              <span>{t.confirmReturnBtn}</span>
-            </button>
-          </div>
         </form>
+
+        {/* Sticky Action Footer with Safe Bottom */}
+        <div className="shrink-0 p-4 sm:p-5 border-t border-slate-800/80 bg-slate-900/95 backdrop-blur-md pb-[max(1.25rem,calc(env(safe-area-inset-bottom,0px)+0.75rem))] flex items-center gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 py-2.5 px-4 rounded-xl border border-slate-700 text-xs font-semibold text-slate-300 hover:bg-slate-800 active:scale-95 transition-all min-h-[44px] cursor-pointer"
+          >
+            {t.cancelBtn}
+          </button>
+          <button
+            type="submit"
+            form="pick-return-date-form"
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/30 active:scale-95 transition-all min-h-[44px] cursor-pointer"
+          >
+            <Check className="w-4 h-4" />
+            <span>{t.confirmReturnBtn}</span>
+          </button>
+        </div>
       </div>
     </div>
   )
