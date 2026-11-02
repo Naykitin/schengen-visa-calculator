@@ -101,4 +101,21 @@ describe('EU Residence & Tax Calculation Engine', () => {
     expect(simExceed.isValid).toBe(false)
     expect(simExceed.exceedsTaxAbsenceLimit).toBe(true)
   })
+
+  it('correctly calculates dynamic absence for ongoing trip abroad', () => {
+    // User left residence country on 2026-10-25 with no exit date (ongoing = true)
+    const ongoingTrip: Trip = {
+      id: 'ongoing-abroad-1',
+      entryDate: '2026-10-25',
+      exitDate: '2026-10-25',
+      ongoing: true,
+    }
+
+    // On 2026-11-02, this ongoing absence is 9 days
+    const summary = calculateResidenceYearSummary([ongoingTrip], 2026, 183, '2026-11-02')
+    expect(summary.daysOutside).toBe(9)
+    expect(summary.daysInside).toBe(365 - 9) // 356 days
+    expect(summary.isTaxResidentSecured).toBe(true) // >= 183 days
+    expect(summary.safeRemainingAbsenceDays).toBe(182 - 9) // 173 days safe
+  })
 })

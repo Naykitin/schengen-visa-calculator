@@ -6,18 +6,21 @@ import {
   ChevronRight,
   Clock,
   Compass,
+  Edit2,
   Home,
   Plane,
   ShieldCheck,
   Sparkles,
   X,
 } from 'lucide-react'
-import type { SchengenSummary } from '../lib/schengen'
+import type { SchengenSummary, Trip } from '../lib/schengen'
+import { getTripDuration } from '../lib/schengen'
 import type { Language, TranslationDictionary } from '../lib/i18n'
 import { getDateLocale } from '../lib/i18n'
 import type { Profile } from '../lib/storage'
 import { EU_COUNTRIES } from '../lib/storage'
 import { calculateResidenceYearSummary, calculatePermanentResidenceSummary } from '../lib/residence'
+import { StartOngoingTripModal, PickReturnDateModal } from './LiveTripModals'
 import { format, parseISO } from 'date-fns'
 
 interface StatusCardProps {
@@ -30,6 +33,9 @@ interface StatusCardProps {
   onResetReferenceDate: () => void
   onToggleProfileMode?: () => void
   onUpdateCountry?: (countryCode: string) => void
+  onStartOngoingTrip?: (entryDate: string, title: string, notes: string) => void
+  onEndOngoingTrip?: (tripId: string, returnDate?: string) => void
+  onEditTrip?: (trip: Trip) => void
 }
 
 export const StatusCard: React.FC<StatusCardProps> = ({
@@ -42,11 +48,26 @@ export const StatusCard: React.FC<StatusCardProps> = ({
   onResetReferenceDate,
   onToggleProfileMode,
   onUpdateCountry,
+  onStartOngoingTrip,
+  onEndOngoingTrip,
+  onEditTrip,
 }) => {
   const [isOverstayDismissed, setIsOverstayDismissed] = useState(false)
+  const [isStartOngoingModalOpen, setIsStartOngoingModalOpen] = useState(false)
+  const [isPickReturnModalOpen, setIsPickReturnModalOpen] = useState(false)
+
   const isToday = referenceDate === new Date().toISOString().slice(0, 10)
   const dateLocale = getDateLocale(lang)
   const formattedRefDate = format(parseISO(referenceDate), 'd MMMM yyyy', { locale: dateLocale })
+
+  // Active ongoing trip tracking
+  const ongoingTrip = activeProfile.trips?.find((t) => t.ongoing) || null
+  const ongoingDuration = ongoingTrip
+    ? getTripDuration(ongoingTrip.entryDate, ongoingTrip.exitDate, true, referenceDate)
+    : 0
+  const formattedOngoingStart = ongoingTrip
+    ? format(parseISO(ongoingTrip.entryDate), 'd MMM yyyy', { locale: dateLocale })
+    : ''
 
   // Year state for EU Resident mode (defaults to year of referenceDate)
   const refYear = parseISO(referenceDate).getFullYear()
@@ -147,6 +168,89 @@ export const StatusCard: React.FC<StatusCardProps> = ({
             )}
           </div>
         </div>
+
+        {/* Live Active Trip Abroad Banner or Quick Departure Launcher */}
+        {ongoingTrip ? (
+          <div className="mb-4 p-4 rounded-2xl bg-gradient-to-r from-emerald-950/70 via-slate-900 to-emerald-950/40 border border-emerald-500/40 shadow-lg shadow-emerald-500/10">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-2.5 w-2.5 relative">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                  </span>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400">
+                    {t.liveStayTitle}
+                  </span>
+                </div>
+                <h4 className="text-sm font-bold text-white flex items-center gap-1.5">
+                  <span>{t.currentlyAbroadLive(ongoingTrip.title)}</span>
+                </h4>
+                <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300">
+                  <span className="font-semibold text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded-lg border border-emerald-500/30">
+                    {t.dayCountSince(ongoingDuration, formattedOngoingStart)}
+                  </span>
+                  <span className="text-slate-400 text-[11px]">
+                    {t.safeRemainingAbroad(resSummary.safeRemainingAbsenceDays)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 pt-1 sm:pt-0">
+                <button
+                  type="button"
+                  onClick={() => onEndOngoingTrip?.(ongoingTrip.id)}
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-lg shadow-emerald-600/30 active:scale-95 transition-all"
+                >
+                  {t.returnedTodayBtn}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsPickReturnModalOpen(true)}
+                  className="p-2 text-slate-300 hover:text-white rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-xs font-medium transition-colors"
+                  title={t.pickReturnDateBtn}
+                >
+                  <CalendarIcon className="w-4 h-4" />
+                </button>
+                {onEditTrip && (
+                  <button
+                    type="button"
+                    onClick={() => onEditTrip(ongoingTrip)}
+                    className="p-2 text-slate-400 hover:text-white rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-xs transition-colors"
+                    title={t.editTrip}
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="mb-4">
+            <button
+              type="button"
+              onClick={() => setIsStartOngoingModalOpen(true)}
+              className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-950/60 hover:bg-slate-950 border border-slate-800 hover:border-emerald-500/40 text-left transition-all group"
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-emerald-500/10 group-hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 transition-colors">
+                  <Plane className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-slate-200 block">
+                    {t.iAmLeavingNowBtn}
+                  </span>
+                  <span className="text-[11px] text-slate-400 block">
+                    {t.quickStartAbroadDesc}
+                  </span>
+                </div>
+              </div>
+              <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-xl border border-emerald-500/20 group-hover:bg-emerald-500 group-hover:text-white transition-all shrink-0 ml-2">
+                + {lang === 'ru' ? 'Выехать' : 'Start'}
+              </span>
+            </button>
+          </div>
+        )}
 
         {/* Warning if any single trip exceeded 6 months */}
         {resSummary.hasSingleTripViolation && (
@@ -257,6 +361,26 @@ export const StatusCard: React.FC<StatusCardProps> = ({
             {permSummary.has5YearOverstay ? 'Exceeded' : 'Healthy'}
           </span>
         </div>
+        {/* Modals for Live Trip Tracking */}
+        <StartOngoingTripModal
+          isOpen={isStartOngoingModalOpen}
+          isResidentMode={true}
+          homeCountryCode={activeProfile.country || 'ES'}
+          lang={lang}
+          t={t}
+          onClose={() => setIsStartOngoingModalOpen(false)}
+          onStart={(entryDate, title, notes) => onStartOngoingTrip?.(entryDate, title, notes)}
+        />
+
+        <PickReturnDateModal
+          isOpen={isPickReturnModalOpen}
+          isResidentMode={true}
+          ongoingTrip={ongoingTrip}
+          lang={lang}
+          t={t}
+          onClose={() => setIsPickReturnModalOpen(false)}
+          onConfirm={(tripId, returnDate) => onEndOngoingTrip?.(tripId, returnDate)}
+        />
       </div>
     )
   }
@@ -318,6 +442,89 @@ export const StatusCard: React.FC<StatusCardProps> = ({
           )}
         </div>
       </div>
+
+      {/* Live Active Schengen Stay Banner or Quick Entry Launcher */}
+      {ongoingTrip ? (
+        <div className="mb-4 p-4 rounded-2xl bg-gradient-to-r from-blue-950/70 via-slate-900 to-indigo-950/40 border border-blue-500/40 shadow-lg shadow-blue-500/10">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="flex h-2.5 w-2.5 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500"></span>
+                </span>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-blue-400">
+                  {t.liveStayTitle}
+                </span>
+              </div>
+              <h4 className="text-sm font-bold text-white flex items-center gap-1.5">
+                <span>{t.currentlyInSchengenLive(ongoingTrip.title)}</span>
+              </h4>
+              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300">
+                <span className="font-semibold text-blue-300 bg-blue-500/20 px-2 py-0.5 rounded-lg border border-blue-500/30">
+                  {t.dayCountSince(ongoingDuration, formattedOngoingStart)}
+                </span>
+                <span className="text-slate-400 text-[11px]">
+                  {t.daysRemaining}: {summary.daysRemainingToday} / 90
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 pt-1 sm:pt-0">
+              <button
+                type="button"
+                onClick={() => onEndOngoingTrip?.(ongoingTrip.id)}
+                className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-lg shadow-blue-600/30 active:scale-95 transition-all"
+              >
+                {t.departedSchengenTodayBtn}
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsPickReturnModalOpen(true)}
+                className="p-2 text-slate-300 hover:text-white rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-xs font-medium transition-colors"
+                title={t.pickDepartureDateBtn}
+              >
+                <CalendarIcon className="w-4 h-4" />
+              </button>
+              {onEditTrip && (
+                <button
+                  type="button"
+                  onClick={() => onEditTrip(ongoingTrip)}
+                  className="p-2 text-slate-400 hover:text-white rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-xs transition-colors"
+                  title={t.editTrip}
+                >
+                  <Edit2 className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={() => setIsStartOngoingModalOpen(true)}
+            className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-950/60 hover:bg-slate-950 border border-slate-800 hover:border-blue-500/40 text-left transition-all group"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-blue-500/10 group-hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 transition-colors">
+                <Plane className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-xs font-bold text-slate-200 block">
+                  {t.iEnteredSchengenNowBtn}
+                </span>
+                <span className="text-[11px] text-slate-400 block">
+                  {t.quickStartSchengenDesc}
+                </span>
+              </div>
+            </div>
+            <span className="text-xs font-semibold text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-xl border border-blue-500/20 group-hover:bg-blue-500 group-hover:text-white transition-all shrink-0 ml-2">
+              + {lang === 'ru' ? 'Въехать' : 'Start'}
+            </span>
+          </button>
+        </div>
+      )}
 
       {/* Overstay alert banner with Dismiss button */}
       {summary.hasOverstay && !isOverstayDismissed && (
@@ -445,6 +652,26 @@ export const StatusCard: React.FC<StatusCardProps> = ({
           </div>
         </div>
       )}
+
+      {/* Modals for Live Trip Tracking */}
+      <StartOngoingTripModal
+        isOpen={isStartOngoingModalOpen}
+        isResidentMode={false}
+        lang={lang}
+        t={t}
+        onClose={() => setIsStartOngoingModalOpen(false)}
+        onStart={(entryDate, title, notes) => onStartOngoingTrip?.(entryDate, title, notes)}
+      />
+
+      <PickReturnDateModal
+        isOpen={isPickReturnModalOpen}
+        isResidentMode={false}
+        ongoingTrip={ongoingTrip}
+        lang={lang}
+        t={t}
+        onClose={() => setIsPickReturnModalOpen(false)}
+        onConfirm={(tripId, returnDate) => onEndOngoingTrip?.(tripId, returnDate)}
+      />
     </div>
   )
 }

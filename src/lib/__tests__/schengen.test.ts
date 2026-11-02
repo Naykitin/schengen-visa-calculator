@@ -110,4 +110,25 @@ describe('Schengen 90/180 calculation engine', () => {
     expect(earliest.entryDate).toBeDefined()
     expect(earliest.entryDate! >= '2026-06-30').toBe(true)
   })
+
+  it('correctly calculates live duration and Schengen stay for ongoing trip', () => {
+    // User entered Schengen on 2026-10-25 with no exit date (ongoing = true)
+    const ongoingTrip: Trip = {
+      id: 'ongoing-1',
+      entryDate: '2026-10-25',
+      exitDate: '2026-10-25',
+      ongoing: true,
+    }
+
+    // Dynamic duration on reference date 2026-11-02 should be 9 days (Oct 25..Nov 02 inclusive)
+    const duration = getTripDuration(ongoingTrip.entryDate, ongoingTrip.exitDate, true, '2026-11-02')
+    expect(duration).toBe(9)
+
+    // Summary calculation for 2026-11-02
+    const summary = calculateSchengenSummary([ongoingTrip], '2026-11-02')
+    expect(summary.currentlyInSchengen).toBe(true)
+    expect(summary.currentTrip?.id).toBe('ongoing-1')
+    expect(summary.daysUsedInWindow).toBe(9)
+    expect(summary.daysRemainingToday).toBe(81) // 90 - 9 = 81
+  })
 })

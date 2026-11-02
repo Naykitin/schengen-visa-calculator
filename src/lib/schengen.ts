@@ -19,6 +19,7 @@ export interface Trip {
   title?: string
   notes?: string
   isPlanned?: boolean // Planned future trips vs actual past trips
+  ongoing?: boolean // Currently abroad / currently in Schengen (open-ended stay)
 }
 
 export interface DayStatus {
@@ -76,11 +77,23 @@ export function fromDateString(str: string): Date {
 }
 
 /**
- * Calculates duration of a trip in days (inclusive of both entry and exit dates)
+ * Calculates duration of a trip in days (inclusive of both entry and exit dates).
+ * If the trip is ongoing, duration is dynamically calculated up to referenceDate (or today).
  */
-export function getTripDuration(entryDate: string, exitDate: string): number {
+export function getTripDuration(
+  entryDate: string,
+  exitDate: string,
+  ongoing?: boolean,
+  referenceDateStr?: string
+): number {
   const start = fromDateString(entryDate)
-  const end = fromDateString(exitDate)
+  let end: Date
+  if (ongoing) {
+    const today = referenceDateStr ? fromDateString(referenceDateStr) : startOfDay(new Date())
+    end = isAfter(start, today) ? start : today
+  } else {
+    end = fromDateString(exitDate)
+  }
   if (isAfter(start, end)) return 0
   return differenceInCalendarDays(end, start) + 1
 }
@@ -88,14 +101,27 @@ export function getTripDuration(entryDate: string, exitDate: string): number {
 /**
  * Builds a fast lookup Set of all dates (YYYY-MM-DD) spent in Schengen.
  * Handles overlaps cleanly (each day counts once).
+ * For ongoing trips, days are dynamically expanded up to referenceDate (or today).
  */
-export function buildSchengenDaysMap(trips: Trip[]): Map<string, string> {
+export function buildSchengenDaysMap(
+  trips: Trip[],
+  referenceDateStr?: string
+): Map<string, string> {
   const map = new Map<string, string>() // dateString -> tripId
+  const today = referenceDateStr ? fromDateString(referenceDateStr) : startOfDay(new Date())
 
   for (const trip of trips) {
-    if (!trip.entryDate || !trip.exitDate) continue
+    if (!trip.entryDate) continue
     const start = fromDateString(trip.entryDate)
-    const end = fromDateString(trip.exitDate)
+    
+    let end: Date
+    if (trip.ongoing) {
+      end = isAfter(start, today) ? start : today
+    } else {
+      if (!trip.exitDate) continue
+      end = fromDateString(trip.exitDate)
+    }
+
     if (isAfter(start, end)) continue
 
     let curr = start
@@ -141,7 +167,7 @@ export function calculateSchengenSummary(
   referenceDateStr: string = toDateString(new Date())
 ): SchengenSummary {
   const refDate = fromDateString(referenceDateStr)
-  const daysMap = buildSchengenDaysMap(trips)
+  const daysMap = buildSchengenDaysMap(trips, referenceDateStr)
 
   // Current window count
   const daysUsedInWindow = countDaysIn180Window(referenceDateStr, daysMap)
@@ -151,7 +177,9 @@ export function calculateSchengenSummary(
   const currentTrip = currentlyInSchengen
     ? trips.find(t => {
         const start = fromDateString(t.entryDate)
-        const end = fromDateString(t.exitDate)
+        const end = t.ongoing
+          ? (isAfter(start, refDate) ? start : refDate)
+          : fromDateString(t.exitDate)
         return (
           (isEqual(refDate, start) || isAfter(refDate, start)) &&
           (isEqual(refDate, end) || isBefore(refDate, end))
@@ -165,7 +193,13 @@ export function calculateSchengenSummary(
 
   if (trips.length > 0) {
     const allStartDates = trips.map(t => fromDateString(t.entryDate))
-    const allEndDates = trips.map(t => fromDateString(t.exitDate))
+    const allEndDates = trips.map(t => {
+      if (t.ongoing) {
+        const start = fromDateString(t.entryDate)
+        return isAfter(start, refDate) ? start : refDate
+      }
+      return fromDateString(t.exitDate)
+    })
     const minDate = min(allStartDates)
     const maxDate = max(allEndDates)
 

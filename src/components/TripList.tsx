@@ -23,6 +23,7 @@ interface TripListProps {
   onEditTrip: (trip: Trip) => void
   onDeleteTrip: (tripId: string) => void
   onLoadSampleData: () => void
+  onEndOngoingTrip?: (tripId: string) => void
 }
 
 export const TripList: React.FC<TripListProps> = ({
@@ -35,10 +36,15 @@ export const TripList: React.FC<TripListProps> = ({
   onEditTrip,
   onDeleteTrip,
   onLoadSampleData,
+  onEndOngoingTrip,
 }) => {
   const dateLocale = getDateLocale(lang)
-  // Sort trips descending by entryDate
-  const sortedTrips = [...trips].sort((a, b) => b.entryDate.localeCompare(a.entryDate))
+  // Sort trips: ongoing trips first, then descending by entryDate
+  const sortedTrips = [...trips].sort((a, b) => {
+    if (a.ongoing && !b.ongoing) return -1
+    if (!a.ongoing && b.ongoing) return 1
+    return b.entryDate.localeCompare(a.entryDate)
+  })
 
   if (trips.length === 0) {
     return (
@@ -94,16 +100,20 @@ export const TripList: React.FC<TripListProps> = ({
 
       <div className="space-y-2.5">
         {sortedTrips.map((trip) => {
-          const duration = getTripDuration(trip.entryDate, trip.exitDate)
+          const duration = getTripDuration(trip.entryDate, trip.exitDate, trip.ongoing)
           const formattedEntry = format(parseISO(trip.entryDate), 'd MMM yyyy', { locale: dateLocale })
-          const formattedExit = format(parseISO(trip.exitDate), 'd MMM yyyy', { locale: dateLocale })
-          const isSingleDay = trip.entryDate === trip.exitDate
+          const formattedExit = trip.ongoing
+            ? t.presentDate
+            : format(parseISO(trip.exitDate), 'd MMM yyyy', { locale: dateLocale })
+          const isSingleDay = !trip.ongoing && trip.entryDate === trip.exitDate
 
           return (
             <div
               key={trip.id}
               className={`group bg-slate-900/80 hover:bg-slate-800/80 border ${
-                trip.isPlanned
+                trip.ongoing
+                  ? 'border-emerald-500/50 bg-emerald-950/20 shadow-lg shadow-emerald-500/10 ring-1 ring-emerald-500/30'
+                  : trip.isPlanned
                   ? 'border-indigo-500/30 bg-indigo-950/20'
                   : 'border-slate-800'
               } rounded-2xl p-4 transition-all duration-200 shadow-sm`}
@@ -112,7 +122,9 @@ export const TripList: React.FC<TripListProps> = ({
                 <div className="flex items-start gap-3">
                   <div
                     className={`p-2.5 rounded-xl shrink-0 mt-0.5 ${
-                      trip.isPlanned
+                      trip.ongoing
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                        : trip.isPlanned
                         ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
                         : isResidentMode
                         ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
@@ -127,11 +139,16 @@ export const TripList: React.FC<TripListProps> = ({
                       <h4 className="text-sm font-bold text-slate-100">
                         {trip.title || (isResidentMode ? `Trip outside ${countryName}` : lang === 'ru' ? 'Поездка в Шенген' : 'Schengen Trip')}
                       </h4>
-                      {trip.isPlanned && (
+                      {trip.ongoing ? (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 shadow-sm">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping inline-block" />
+                          {t.ongoingTripBadge}
+                        </span>
+                      ) : trip.isPlanned ? (
                         <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
                           {t.plannedBadge}
                         </span>
-                      )}
+                      ) : null}
                     </div>
 
                     <div className="flex items-center gap-2 text-xs text-slate-400 mt-1">
@@ -150,11 +167,26 @@ export const TripList: React.FC<TripListProps> = ({
                 </div>
 
                 <div className="flex flex-col items-end shrink-0 gap-2">
-                  <span className="text-xs font-bold text-slate-200 bg-slate-800/80 border border-slate-700/60 px-2.5 py-1 rounded-xl">
-                    {isResidentMode ? t.abroadDuration(duration) : t.durationDays(duration)}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs font-bold px-2.5 py-1 rounded-xl border ${
+                      trip.ongoing
+                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                        : 'text-slate-200 bg-slate-800/80 border-slate-700/60'
+                    }`}>
+                      {isResidentMode ? t.abroadDuration(duration) : t.durationDays(duration)}
+                    </span>
+                  </div>
 
-                  <div className="flex items-center gap-1 opacity-90 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-1.5 opacity-90 group-hover:opacity-100 transition-opacity">
+                    {trip.ongoing && onEndOngoingTrip && (
+                      <button
+                        onClick={() => onEndOngoingTrip(trip.id)}
+                        className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold px-2.5 py-1 rounded-xl shadow-md shadow-emerald-600/30 active:scale-95 transition-all"
+                        title={isResidentMode ? t.returnedTodayBtn : t.departedSchengenTodayBtn}
+                      >
+                        {isResidentMode ? t.returnedTodayBtn : t.departedSchengenTodayBtn}
+                      </button>
+                    )}
                     <button
                       onClick={() => onEditTrip(trip)}
                       className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-700/80 transition-colors"
