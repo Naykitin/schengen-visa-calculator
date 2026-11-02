@@ -19,9 +19,29 @@
   }
 }
 
-/* Safe Area Insets for iPhone notch, Dynamic Island, and Home indicator */
+/* Safe Area Insets for iPhone notch, Dynamic Island, iPad status bar, and Home indicator */
 .safe-top {
-  padding-top: max(0.875rem, env(safe-area-inset-top));
+  padding-top: calc(env(safe-area-inset-top, 0px) + 0.875rem);
+}
+
+@media (min-width: 640px) {
+  .safe-top {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 1.25rem);
+  }
+}
+
+/* Standalone PWA mode (e.g. Added to Home Screen on iPadOS / iOS / Android) */
+@media all and (display-mode: standalone) {
+  .safe-top {
+    /* Ensures at least 24px status bar allowance + padding even if WebKit env() returns 0px */
+    padding-top: calc(max(1.5rem, env(safe-area-inset-top, 0px)) + 0.875rem);
+  }
+
+  @media (min-width: 640px) {
+    .safe-top {
+      padding-top: calc(max(1.75rem, env(safe-area-inset-top, 0px)) + 1.25rem);
+    }
+  }
 }
 
 .safe-bottom {

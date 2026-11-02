@@ -43,7 +43,7 @@ export const Header: React.FC<HeaderProps> = ({
     : '🇪🇺'
 
   return (
-    <header className="sticky top-0 z-30 bg-slate-950/85 backdrop-blur-md border-b border-slate-800 safe-top px-3.5 sm:px-6 py-3 sm:py-3.5 transition-all">
+    <header className="sticky top-0 z-30 bg-slate-950/85 backdrop-blur-md border-b border-slate-800 safe-top px-3.5 sm:px-6 pb-3 sm:pb-4 transition-all">
       <div className="max-w-6xl mx-auto flex items-center justify-between gap-2">
         {/* Left: Logo & Title & Profile Switcher */}
         <div className="flex items-center gap-2.5 sm:gap-3">
