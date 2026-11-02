@@ -283,12 +283,6 @@ export function App() {
     triggerHaptic('light')
   }
 
-  const handleToggleLanguage = () => {
-    const list: Language[] = ['en', 'de', 'fr', 'pl', 'ru']
-    const nextIdx = (list.indexOf(lang) + 1) % list.length
-    handleSelectLanguage(list[nextIdx])
-  }
-
   // Profile operations
   const handleSelectProfile = (profileId: string) => {
     setAppData((prev) => ({ ...prev, activeProfileId: profileId }))
@@ -485,7 +479,6 @@ export function App() {
         onReloadApp={reloadApp}
         onOpenProfileModal={() => setIsProfileModalOpen(true)}
         onOpenSyncModal={() => setIsSyncModalOpen(true)}
-        onToggleLanguage={handleToggleLanguage}
         onSelectLanguage={handleSelectLanguage}
         onOpenAddModal={handleAddTrip}
         onOpenBackupModal={() => setIsBackupModalOpen(true)}

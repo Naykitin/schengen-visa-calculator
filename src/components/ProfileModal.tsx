@@ -148,7 +148,14 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                         )}
                       </h4>
                       <p className="text-[11px] text-slate-400 mt-0.5">
-                        {profile.trips.length} {isResident ? 'absences recorded' : t.daysUsed}
+                        {profile.trips.length}{' '}
+                        {isResident
+                          ? profile.trips.length === 1
+                            ? 'absence recorded'
+                            : 'absences recorded'
+                          : profile.trips.length === 1
+                          ? 'trip recorded'
+                          : 'trips recorded'}
                       </p>
                     </div>
                   </div>
