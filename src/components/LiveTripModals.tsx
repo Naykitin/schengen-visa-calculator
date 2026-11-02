@@ -186,7 +186,7 @@ export const StartOngoingTripModal: React.FC<StartOngoingTripModalProps> = ({
               max={todayStr}
               value={entryDate}
               onChange={(e) => setEntryDate(e.target.value)}
-              className="w-full h-11 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
+              className="w-full min-w-0 max-w-full block h-11 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
             />
           </div>
 
@@ -351,7 +351,7 @@ export const PickReturnDateModal: React.FC<PickReturnDateModalProps> = ({
               max={todayStr}
               value={returnDate}
               onChange={(e) => setReturnDate(e.target.value)}
-              className="w-full h-11 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
+              className="w-full min-w-0 max-w-full block h-11 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
             />
           </div>
 
