@@ -1,29 +1,39 @@
 # Schengen Visa Calculator (90/180 Rule) 🇪🇺✈️
 
-An open-source, privacy-first mobile web application and PWA for tracking, calculating, and planning Schengen area stays according to the official **90 days within any 180-day period** rule ([EU Regulation 2016/399](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32016R0399)).
+An open-source, privacy-first web application and PWA for tracking, calculating, and planning Schengen area stays (90/180 rule) and Pan-European EU tax residency (183-day rule & Directive 2003/109/EC permanent residence).
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![CI Tests](https://github.com/Naykitin/schengen-visa-calculator/actions/workflows/ci.yml/badge.svg)](https://github.com/Naykitin/schengen-visa-calculator/actions)
-[![Deploy with Cloudflare Pages](https://img.shields.io/badge/Deploy-Cloudflare%20Pages-f38020.svg)](https://pages.cloudflare.com/)
+> 🌐 **Live Web Application:** [https://schengen-visa-calculator.pages.dev](https://schengen-visa-calculator.pages.dev/)
+
+[![Live App](https://img.shields.io/badge/Live_App-schengen--visa--calculator.pages.dev-22c55e.svg?style=flat-square)](https://schengen-visa-calculator.pages.dev/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+[![CI Tests](https://github.com/Naykitin/schengen-visa-calculator/actions/workflows/ci.yml/badge.svg?style=flat-square)](https://github.com/Naykitin/schengen-visa-calculator/actions)
+[![Deploy with Cloudflare Pages](https://img.shields.io/badge/Deploy-Cloudflare%20Pages-f38020.svg?style=flat-square)](https://pages.cloudflare.com/)
 
 ---
 
 ## 🌟 Key Features
 
-- **Mathematically Accurate 90/180 Engine:** Strict compliance with the official Schengen Border Code calculation logic. Both entry and exit dates count as full days of stay within any sliding 180-day window.
+- **Pan-European Dual-Engine:**
+  - **Schengen Visitor Mode (90/180):** Strict compliance with the official Schengen Border Code calculation logic ([EU Regulation 2016/399](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32016R0399)). Both entry and exit dates count as full days of stay within any sliding 180-day window.
+  - **EU Resident & Tax Mode:** Built-in tracker for residents of all 27 EU member states (Spain, Germany, France, Portugal, Italy, Poland, etc.) monitoring the **183-day annual tax residency rule** and **EU Directive 2003/109/EC 5-year permanent residence absence limits** (max 10 months / 300 days total, max 6 months per trip).
+- **Live Trip Tracker ("Currently Abroad / Returned"):**
+  - 1-click active stay tracking without needing to set a return date in advance.
+  - Live pulsing dashboard banner with real-time day counter and safe allowance projections.
+  - 1-click `I returned today` / `I departed today` button to instantly close trips and sync.
 - **Real-Time Status Dashboard:**
   - Days remaining out of the 90-day allowance.
-  - Active presence status ("Currently in Schengen" / "Outside Schengen").
-  - Visual 90-day quota progress bar.
+  - Active presence status ("Currently in Schengen" / "Outside Schengen" / "Currently Abroad").
+  - Visual 90-day quota and 183-day tax milestone progress bars.
   - Day recovery timeline (dates when older trips drop out of the 180-day window and restore allowance).
 - **Smart Trip Planner:**
   - *“When can I travel for N days?”* — Automatically discovers the earliest legal entry date for your desired trip length.
   - *“Check trip dates”* — Validates proposed future trips and flags exact overstay dates if a limit is exceeded.
 - **Interactive Calendar:** Visual month-by-month view with touch swipe navigation between months, color-coded markers for completed trips, planned trips, and overstay warnings.
-- **Multi-Profile & Multi-Passport Support:** Track multiple passports, family members, or travelers with separate color tags and isolated trip calculations.
+- **Multi-Profile & Multi-Passport Support:** Track multiple passports, family members, or residence permits with separate color tags and isolated trip calculations.
 - **Multi-Device Cloud Sync (Cloudflare D1):**
   - Instant pairing between phone and laptop via a high-entropy secret sync key or 1-click URL (`?sync=...`).
-  - No accounts, no emails, no passwords.
+  - Anti-bruteforce progressive cooldown and client debounce protection.
+  - Zero-Knowledge approach: No accounts, no emails, no passwords.
   - Powered by serverless Cloudflare Pages Functions and Cloudflare D1 SQLite database.
 - **Multi-Device Responsive Architecture:**
   - **Mobile Smartphones (< 640px):** Bottom Navigation, native-like Bottom Sheets with swipe gestures, and Safe Area insets (`env(safe-area-inset-top)`, `env(safe-area-inset-bottom)`) for iPhone notch, Dynamic Island, and Home bar.
@@ -36,7 +46,7 @@ An open-source, privacy-first mobile web application and PWA for tracking, calcu
   - Automatically requests browser **Persistent Storage** (`navigator.storage.persist()`) to prevent cache purges.
   - Zero third-party trackers, zero cookies, zero external telemetry. All calculations run client-side.
 - **1-Click Backup & Restore:** Export and import trip records to/from JSON files at any time.
-- **Bilingual Interface:** Instant language toggle between English and Russian (**EN / RU**).
+- **5 European Languages:** Full native translations and localized date formats for English 🇬🇧, German 🇩🇪, French 🇫🇷, Polish 🇵🇱, and Russian 🇷🇺.
 
 ---
 
