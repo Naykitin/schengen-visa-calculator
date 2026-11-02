@@ -17,11 +17,12 @@ import {
   calculateSchengenSummary,
   toDateString,
 } from './lib/schengen'
-import type { AppStorageData } from './lib/storage'
+import type { AppStorageData, Profile, ProfileMode } from './lib/storage'
 import {
   loadAppStorage,
   requestPersistentStorage,
   saveAppStorage,
+  EU_COUNTRIES,
 } from './lib/storage'
 import { triggerHaptic } from './lib/haptics'
 import { useNetworkStatus } from './lib/useNetworkStatus'
@@ -44,13 +45,17 @@ const SyncModal = lazy(() => import('./components/SyncModal').then((m) => ({ def
 const InfoModal = lazy(() => import('./components/InfoModal').then((m) => ({ default: m.InfoModal })))
 
 const INITIAL_STORAGE: AppStorageData = {
-  version: '2.0',
+  version: '2.1',
   activeProfileId: 'default_profile',
   profiles: [
     {
       id: 'default_profile',
       name: 'My Passport',
       color: 'blue',
+      mode: 'schengen',
+      country: 'ES',
+      taxTargetDays: 183,
+      customAbsenceLimit: 182,
       trips: [],
     },
   ],
@@ -82,15 +87,10 @@ export function App() {
   const [syncError, setSyncError] = useState<string | null>(null)
   const autoSyncTimeoutRef = useRef<any>(null)
 
-  // Navigation tabs (Mobile / Tablet active tab)
+  // Active view date and state
+  const [referenceDate, setReferenceDate] = useState(() => toDateString(new Date()))
   const [activeTab, setActiveTab] = useState<'trips' | 'planner' | 'calendar'>('trips')
-  // Desktop secondary panel tab
   const [desktopSideTab, setDesktopSideTab] = useState<'planner' | 'calendar'>('planner')
-
-  // Reference date for calculation (defaults to today)
-  const [referenceDate, setReferenceDate] = useState<string>(
-    toDateString(new Date())
-  )
 
   // Modals state
   const [isTripModalOpen, setIsTripModalOpen] = useState(false)
@@ -180,7 +180,7 @@ export function App() {
     setSyncKey(newKey)
     saveSyncPreferences(newKey, true, Date.now())
     triggerHaptic('medium')
-    await syncWithCloud(newKey, appData)
+    syncWithCloud(newKey, appData)
   }
 
   const handleConnectSyncKey = async (key: string) => {
@@ -189,46 +189,46 @@ export function App() {
     triggerHaptic('medium')
 
     try {
-      const result = await fetchRemoteVault(key)
-      if (result.payload && Array.isArray(result.payload.profiles)) {
-        setAppData(result.payload)
+      const remoteData = await fetchRemoteVault(key)
+      if (remoteData && remoteData.payload) {
+        setAppData(remoteData.payload)
         setSyncKey(key)
-        setLastSyncTime(result.updatedAt)
-        saveSyncPreferences(key, true, result.updatedAt)
-        setIsSyncModalOpen(false)
+        setLastSyncTime(remoteData.updatedAt)
+        saveSyncPreferences(key, true, remoteData.updatedAt)
       }
     } catch (err: any) {
-      setSyncError(err.message || 'Could not connect to vault with this key')
-      triggerHaptic('error')
+      setSyncError(err.message || 'Failed to connect sync key')
     } finally {
       setIsSyncing(false)
     }
   }
 
+  const handleToggleAutoSync = (enabled: boolean) => {
+    setAutoSync(enabled)
+    if (syncKey) {
+      saveSyncPreferences(syncKey, enabled, lastSyncTime)
+    }
+    triggerHaptic('light')
+  }
+
   const handleDisconnectSync = () => {
     setSyncKey(null)
     setLastSyncTime(null)
-    saveSyncPreferences(null, false)
+    saveSyncPreferences(null, false, null)
     triggerHaptic('warning')
   }
 
-  const handleToggleAutoSync = (enabled: boolean) => {
-    setAutoSync(enabled)
-    saveSyncPreferences(syncKey, enabled, lastSyncTime || undefined)
-  }
-
-  // Get active profile and its trips
+  // Active profile trips
   const activeProfile =
     appData.profiles.find((p) => p.id === appData.activeProfileId) || appData.profiles[0]
-  const currentTrips = activeProfile ? activeProfile.trips : []
+  const currentTrips = activeProfile.trips || []
+  const isResidentMode = activeProfile.mode === 'eu_resident'
+  const countryObj = EU_COUNTRIES.find((c) => c.code === (activeProfile.country || 'ES')) || EU_COUNTRIES[0]
 
-  // Desktop keyboard shortcuts: 'N' for new trip, '1'/'2'/'3' for tabs
+  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger if user is typing in an input or textarea
       if (
-        document.activeElement?.tagName === 'INPUT' ||
-        document.activeElement?.tagName === 'TEXTAREA' ||
         isTripModalOpen ||
         isBackupModalOpen ||
         isInfoModalOpen ||
@@ -256,15 +256,15 @@ export function App() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [isTripModalOpen, isBackupModalOpen, isInfoModalOpen, isProfileModalOpen, isSyncModalOpen])
 
-  // Calculate live summary for current active profile trips
+  // Calculate live summary for current active profile trips (Schengen 90/180)
   const summary = calculateSchengenSummary(currentTrips, referenceDate)
 
-  // Trigger warning haptic if an overstay is detected
+  // Trigger warning haptic if an overstay is detected in tourist mode
   useEffect(() => {
-    if (summary.hasOverstay) {
+    if (!isResidentMode && summary.hasOverstay) {
       triggerHaptic('warning')
     }
-  }, [summary.hasOverstay])
+  }, [summary.hasOverstay, isResidentMode])
 
   // Language Toggle
   const handleToggleLanguage = () => {
@@ -277,17 +277,33 @@ export function App() {
     setAppData((prev) => ({ ...prev, activeProfileId: profileId }))
   }
 
-  const handleAddProfile = (name: string, color: string) => {
-    const newProfile = {
+  const handleAddProfile = (
+    name: string,
+    color: string,
+    mode: ProfileMode = 'schengen',
+    country: string = 'ES'
+  ) => {
+    const newProfile: Profile = {
       id: `profile_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       name,
       color,
+      mode,
+      country,
+      taxTargetDays: 183,
+      customAbsenceLimit: 182,
       trips: [],
     }
     setAppData((prev) => ({
       ...prev,
       activeProfileId: newProfile.id,
       profiles: [...prev.profiles, newProfile],
+    }))
+  }
+
+  const handleUpdateProfile = (profileId: string, updates: Partial<Profile>) => {
+    setAppData((prev) => ({
+      ...prev,
+      profiles: prev.profiles.map((p) => (p.id === profileId ? { ...p, ...updates } : p)),
     }))
   }
 
@@ -320,11 +336,14 @@ export function App() {
 
   const handleSaveTrip = (trip: Trip) => {
     triggerHaptic('medium')
-    if (editingTrip) {
-      updateCurrentProfileTrips((trips) => trips.map((t) => (t.id === trip.id ? trip : t)))
-    } else {
-      updateCurrentProfileTrips((trips) => [...trips, trip])
-    }
+    updateCurrentProfileTrips((trips) => {
+      const exists = trips.some((t) => t.id === trip.id)
+      if (exists) {
+        return trips.map((t) => (t.id === trip.id ? trip : t))
+      }
+      return [...trips, trip]
+    })
+    setIsTripModalOpen(false)
     setEditingTrip(null)
   }
 
@@ -425,16 +444,25 @@ export function App() {
             <StatusCard
               summary={summary}
               referenceDate={referenceDate}
+              activeProfile={activeProfile}
               lang={lang}
               t={t}
               onReferenceDateChange={setReferenceDate}
               onResetReferenceDate={() => setReferenceDate(toDateString(new Date()))}
+              onToggleProfileMode={() =>
+                handleUpdateProfile(activeProfile.id, {
+                  mode: isResidentMode ? 'schengen' : 'eu_resident',
+                  country: activeProfile.country || 'ES',
+                })
+              }
             />
 
             <TripList
               trips={currentTrips}
               lang={lang}
               t={t}
+              isResidentMode={isResidentMode}
+              countryName={countryObj.name}
               onAddTrip={handleAddTrip}
               onEditTrip={handleEditTrip}
               onDeleteTrip={handleDeleteTrip}
@@ -511,10 +539,17 @@ export function App() {
           <StatusCard
             summary={summary}
             referenceDate={referenceDate}
+            activeProfile={activeProfile}
             lang={lang}
             t={t}
             onReferenceDateChange={setReferenceDate}
             onResetReferenceDate={() => setReferenceDate(toDateString(new Date()))}
+            onToggleProfileMode={() =>
+              handleUpdateProfile(activeProfile.id, {
+                mode: isResidentMode ? 'schengen' : 'eu_resident',
+                country: activeProfile.country || 'ES',
+              })
+            }
           />
 
           {/* Tablet & Mobile Tab Switcher */}
@@ -572,6 +607,8 @@ export function App() {
                 trips={currentTrips}
                 lang={lang}
                 t={t}
+                isResidentMode={isResidentMode}
+                countryName={countryObj.name}
                 onAddTrip={handleAddTrip}
                 onEditTrip={handleEditTrip}
                 onDeleteTrip={handleDeleteTrip}
@@ -625,6 +662,8 @@ export function App() {
             existingTrips={currentTrips}
             lang={lang}
             t={t}
+            isResidentMode={isResidentMode}
+            countryName={countryObj.name}
             onClose={() => {
               setIsTripModalOpen(false)
               setEditingTrip(null)
@@ -652,6 +691,7 @@ export function App() {
             onClose={() => setIsProfileModalOpen(false)}
             onSelectProfile={handleSelectProfile}
             onAddProfile={handleAddProfile}
+            onUpdateProfile={handleUpdateProfile}
             onDeleteProfile={handleDeleteProfile}
           />
         )}
