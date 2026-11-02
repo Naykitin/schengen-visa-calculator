@@ -21,7 +21,7 @@
 
 /* Safe Area Insets for iPhone notch, Dynamic Island, and Home indicator */
 .safe-top {
-  padding-top: max(0.75rem, env(safe-area-inset-top));
+  padding-top: max(0.875rem, env(safe-area-inset-top));
 }
 
 .safe-bottom {
