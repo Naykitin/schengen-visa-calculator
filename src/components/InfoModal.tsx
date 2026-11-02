@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { BookOpen, ExternalLink, ShieldCheck, X } from 'lucide-react'
+import { BookOpen, ExternalLink, Scale, ShieldCheck, X } from 'lucide-react'
 import type { TranslationDictionary } from '../lib/i18n'
 
 interface InfoModalProps {
@@ -61,6 +61,28 @@ export const InfoModal: React.FC<InfoModalProps> = ({ isOpen, t, onClose }) => {
               <li>{t.infoRule2}</li>
               <li>{t.infoRule3}</li>
             </ul>
+          </section>
+
+          {/* Legal Disclaimer Section */}
+          <section className="p-3.5 bg-slate-950/80 border border-slate-800/90 rounded-2xl space-y-2 text-[11px] text-slate-400">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-200">
+              <Scale className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>{t.disclaimerTitle}</span>
+            </div>
+            <p className="leading-relaxed text-slate-400">
+              {t.disclaimerFull}
+            </p>
+            <div className="pt-1">
+              <a
+                href="https://ec.europa.eu/assets/home-affairs/schengen-calculator/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:text-blue-300 inline-flex items-center gap-1 font-medium"
+              >
+                <span>{t.officialEuCalculatorLink}</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
           </section>
 
           <section className="pt-3 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">

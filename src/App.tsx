@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback, lazy, Suspense } from 'react'
 import {
   CalendarDays,
   Compass,
+  ExternalLink,
   ListFilter,
   Plus,
 } from 'lucide-react'
@@ -700,6 +701,48 @@ export function App() {
           </div>
         </div>
       </main>
+
+      {/* =========================================================================
+          SITE FOOTER & LEGAL DISCLAIMER
+         ========================================================================= */}
+      <footer className="mt-auto max-w-6xl w-full mx-auto px-4 py-8 border-t border-slate-900 text-center space-y-2.5">
+        <p className="text-[11px] text-slate-500 max-w-3xl mx-auto leading-relaxed">
+          ⚖️ <span className="text-slate-400 font-medium">{t.disclaimerShort}</span>
+        </p>
+
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-xs text-slate-400 pt-1">
+          <button
+            onClick={() => setIsInfoModalOpen(true)}
+            className="text-blue-400 hover:text-blue-300 underline underline-offset-2 transition-colors cursor-pointer"
+          >
+            {t.disclaimerTitle} & {t.aboutRule}
+          </button>
+          <span className="text-slate-600 hidden xs:inline">•</span>
+          <a
+            href="https://ec.europa.eu/assets/home-affairs/schengen-calculator/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-slate-200 inline-flex items-center gap-1 transition-colors text-slate-400"
+          >
+            <span>{t.officialEuCalculatorLink}</span>
+            <ExternalLink className="w-3 h-3 text-slate-500" />
+          </a>
+          <span className="text-slate-600 hidden xs:inline">•</span>
+          <a
+            href="https://github.com/Naykitin/schengen-visa-calculator"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-slate-200 inline-flex items-center gap-1 transition-colors text-slate-400"
+          >
+            <span>GitHub</span>
+            <ExternalLink className="w-3 h-3 text-slate-500" />
+          </a>
+        </div>
+
+        <p className="text-[10px] text-slate-600 pt-1">
+          {t.allRightsReserved}
+        </p>
+      </footer>
 
       {/* =========================================================================
           MOBILE BOTTOM FLOATING ACTION BUTTON

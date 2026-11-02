@@ -260,6 +260,13 @@ export interface TranslationDictionary {
 
   // Desktop shortcuts
   desktopShortcutsHint: string
+
+  // Legal Disclaimer & Footer
+  disclaimerTitle: string
+  disclaimerShort: string
+  disclaimerFull: string
+  officialEuCalculatorLink: string
+  allRightsReserved: string
 }
 
 export const translations: Record<Language, TranslationDictionary> = {
@@ -488,6 +495,13 @@ export const translations: Record<Language, TranslationDictionary> = {
     infoOpenSourceBadge: 'Open-Source (MIT License)',
 
     desktopShortcutsHint: 'Shortcuts: N — new trip, Esc — close modal, 1/2/3 — switch views',
+
+    // Legal Disclaimer & Footer
+    disclaimerTitle: 'Legal Disclaimer',
+    disclaimerShort: 'Not an official EU government resource. This calculator is an informational assisting tool only and does not constitute legal, visa, or tax advice.',
+    disclaimerFull: 'This application is an independent open-source assisting tool designed to help travelers and EU residents calculate days of stay. It is not affiliated with, endorsed by, or operated by the European Union or any national government authority. The calculation results do not confer a legal right to stay or tax status. Final decisions regarding entry, permitted duration of stay, and visa compliance are made exclusively by competent border control and immigration authorities in accordance with the Schengen Borders Code (EU Regulation 2016/399).',
+    officialEuCalculatorLink: 'Official EU Commission Calculator',
+    allRightsReserved: 'Privacy-first: 100% client-side calculations.',
   },
 
   de: {
@@ -716,6 +730,13 @@ export const translations: Record<Language, TranslationDictionary> = {
     infoOpenSourceBadge: 'Open-Source (MIT-Lizenz)',
 
     desktopShortcutsHint: 'Tastenkürzel: N — neue Reise, Esc — schließen, 1/2/3 — Ansichten',
+
+    // Legal Disclaimer & Footer
+    disclaimerTitle: 'Rechtlicher Hinweis',
+    disclaimerShort: 'Keine offizielle Regierungsquelle der EU. Dieser Rechner dient ausschließlich Informationszwecken und stellt keine Rechts- oder Steuerberatung dar.',
+    disclaimerFull: 'Diese Anwendung ist ein unabhängiges Open-Source-Hilfsmittel zur Berechnung und Planung von Aufenthaltsdauern. Sie steht in keiner Verbindung zur Europäischen Union oder nationalen Behörden. Die Berechnungsergebnisse begründen keinen Rechtsanspruch auf Aufenthalt oder steuerlichen Status. Die endgültige Entscheidung über Einreise, zulässige Aufenthaltsdauer und Visa-Einhaltung treffen ausschließlich die Grenz- und Einwanderungsbehörden gemäß dem Schengener Grenzkodex (EU-Verordnung 2016/399).',
+    officialEuCalculatorLink: 'Offizieller Rechner der EU-Kommission',
+    allRightsReserved: 'Privatsphäre an erster Stelle: Alle Berechnungen laufen lokal auf Ihrem Gerät.',
   },
 
   fr: {
@@ -944,6 +965,13 @@ export const translations: Record<Language, TranslationDictionary> = {
     infoOpenSourceBadge: 'Open-Source (Licence MIT)',
 
     desktopShortcutsHint: 'Raccourcis : N — nouveau séjour, Échap — fermer, 1/2/3 — onglets',
+
+    // Legal Disclaimer & Footer
+    disclaimerTitle: 'Avertissement juridique',
+    disclaimerShort: "Cette application n'est pas un service officiel de l'Union européenne. Ce calculateur est un outil d'aide informatif et ne constitue pas un conseil juridique ou fiscal.",
+    disclaimerFull: "Cette application est un outil d'aide indépendant et open-source conçu pour calculer et planifier les séjours. Elle n'est ni affiliée ni exploitée par l'Union européenne ou une autorité nationale. Les calculs ne confèrent aucun droit légal de séjour. La décision finale relative à l'entrée et à la durée de séjour appartient exclusivement aux autorités frontalières et migratoires compétentes conformément au Code frontières Schengen (Règlement UE 2016/399).",
+    officialEuCalculatorLink: 'Calculateur officiel de la Commission européenne',
+    allRightsReserved: 'Respect absolu de la vie privée : tous les calculs sont effectués localement sur votre appareil.',
   },
 
   pl: {
@@ -1172,6 +1200,13 @@ export const translations: Record<Language, TranslationDictionary> = {
     infoOpenSourceBadge: 'Open-Source (Licencja MIT)',
 
     desktopShortcutsHint: 'Skróty: N — nowa podróż, Esc — zamknij, 1/2/3 — zakładki',
+
+    // Legal Disclaimer & Footer
+    disclaimerTitle: 'Zastrzeżenie prawne',
+    disclaimerShort: 'Aplikacja nie jest oficjalnym źródłem organów Unii Europejskiej. Kalkulator ma charakter wyłącznie informacyjny i nie stanowi porady prawnej ani podatkowej.',
+    disclaimerFull: 'Aplikacja jest niezależnym narzędziem open-source pomagającym w planowaniu i obliczaniu dni pobytu. Nie jest powiązana z instytucjami Unii Europejskiej ani organami rządowymi. Wyniki obliczeń nie stanowią prawnego tytułu do pobytu ani statusu rezydencji podatkowej. Ostateczną decyzję o wjeździe i dopuszczalnym okresie pobytu podejmują wyłącznie funkcjonariusze straży granicznej zgodnie z Kodeksem Granicznym Schengen (Rozporządzenie UE 2016/399).',
+    officialEuCalculatorLink: 'Oficjalny kalkulator Komisji Europejskiej',
+    allRightsReserved: 'Prywatność na pierwszym miejscu: wszystkie obliczenia odbywają się lokalnie na Twoim urządzeniu.',
   },
 
   ru: {
@@ -1400,5 +1435,12 @@ export const translations: Record<Language, TranslationDictionary> = {
     infoOpenSourceBadge: 'Open-Source (MIT License)',
 
     desktopShortcutsHint: 'Горячие клавиши: N — новая поездка, Esc — закрыть, 1/2/3 — вкладки',
+
+    // Legal Disclaimer & Footer
+    disclaimerTitle: 'Правовая оговорка',
+    disclaimerShort: 'Не является официальным государственным ресурсом органов ЕС. Калькулятор носит исключительно информационный характер и не заменяет юридическую или налоговую консультацию.',
+    disclaimerFull: 'Данное приложение является независимым инструментом с открытым исходным кодом для персонального расчёта и планирования поездок. Сервис не связан с институтами Европейского союза или государственными органами стран-членов. Результаты расчёта не дают автоматического права на пребывание или налоговый статус. Окончательное решение о въезде, выезде и соблюдении визового режима принимается исключительно сотрудниками пограничного контроля и миграционных служб в соответствии с Шенгенским кодексом о границах (EU Regulation 2016/399).',
+    officialEuCalculatorLink: 'Официальный калькулятор Еврокомиссии',
+    allRightsReserved: 'Конфиденциальность превыше всего: все расчёты выполняются на вашем устройстве.',
   },
 }
