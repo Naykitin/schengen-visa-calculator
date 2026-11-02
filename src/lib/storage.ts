@@ -2,10 +2,52 @@ import { get, set } from 'idb-keyval'
 import type { Trip } from './schengen'
 import { isValidDateString, safeJsonParse, sanitizeString } from './sanitize'
 
+export type ProfileMode = 'schengen' | 'eu_resident'
+
+export interface EUCountry {
+  code: string
+  name: string
+  flag: string
+}
+
+export const EU_COUNTRIES: EUCountry[] = [
+  { code: 'ES', name: 'Spain', flag: '🇪🇸' },
+  { code: 'PT', name: 'Portugal', flag: '🇵🇹' },
+  { code: 'DE', name: 'Germany', flag: '🇩🇪' },
+  { code: 'FR', name: 'France', flag: '🇫🇷' },
+  { code: 'IT', name: 'Italy', flag: '🇮🇹' },
+  { code: 'NL', name: 'Netherlands', flag: '🇳🇱' },
+  { code: 'PL', name: 'Poland', flag: '🇵🇱' },
+  { code: 'CY', name: 'Cyprus', flag: '🇨🇾' },
+  { code: 'GR', name: 'Greece', flag: '🇬🇷' },
+  { code: 'AT', name: 'Austria', flag: '🇦🇹' },
+  { code: 'BE', name: 'Belgium', flag: '🇧🇪' },
+  { code: 'CZ', name: 'Czechia', flag: '🇨🇿' },
+  { code: 'IE', name: 'Ireland', flag: '🇮🇪' },
+  { code: 'SE', name: 'Sweden', flag: '🇸🇪' },
+  { code: 'FI', name: 'Finland', flag: '🇫🇮' },
+  { code: 'DK', name: 'Denmark', flag: '🇩🇰' },
+  { code: 'HU', name: 'Hungary', flag: '🇭🇺' },
+  { code: 'RO', name: 'Romania', flag: '🇷🇴' },
+  { code: 'BG', name: 'Bulgaria', flag: '🇧🇬' },
+  { code: 'HR', name: 'Croatia', flag: '🇭🇷' },
+  { code: 'EE', name: 'Estonia', flag: '🇪🇪' },
+  { code: 'LV', name: 'Latvia', flag: '🇱🇻' },
+  { code: 'LT', name: 'Lithuania', flag: '🇱🇹' },
+  { code: 'SK', name: 'Slovakia', flag: '🇸🇰' },
+  { code: 'SI', name: 'Slovenia', flag: '🇸🇮' },
+  { code: 'LU', name: 'Luxembourg', flag: '🇱🇺' },
+  { code: 'MT', name: 'Malta', flag: '🇲🇹' },
+]
+
 export interface Profile {
   id: string
   name: string
   color: string // Tailwind color key, e.g. 'blue' | 'indigo' | 'emerald' | 'amber' | 'rose' | 'purple'
+  mode?: ProfileMode // 'schengen' | 'eu_resident', defaults to 'schengen'
+  country?: string   // 'ES', 'DE', etc., defaults to 'ES' when mode is 'eu_resident'
+  taxTargetDays?: number // Default: 183 days
+  customAbsenceLimit?: number // Default: 182 days
   trips: Trip[]
 }
 
@@ -57,7 +99,14 @@ export async function loadAppStorage(defaultName: string = 'My Passport'): Promi
     // 1. Try to load v2 multi-profile data from IndexedDB
     const data = await get<AppStorageData>(STORAGE_PROFILES_KEY)
     if (data && Array.isArray(data.profiles) && data.profiles.length > 0) {
-      return data
+      const sanitizedProfiles: Profile[] = data.profiles.map(p => ({
+        ...p,
+        mode: (p.mode === 'eu_resident' ? 'eu_resident' : 'schengen') as ProfileMode,
+        country: p.country || 'ES',
+        taxTargetDays: p.taxTargetDays || 183,
+        customAbsenceLimit: p.customAbsenceLimit || 182,
+      }))
+      return { ...data, profiles: sanitizedProfiles }
     }
 
     // 2. Try localStorage for v2
@@ -65,8 +114,16 @@ export async function loadAppStorage(defaultName: string = 'My Passport'): Promi
     if (localV2) {
       const parsed = safeJsonParse(localV2)
       if (parsed && Array.isArray(parsed.profiles) && parsed.profiles.length > 0) {
-        await set(STORAGE_PROFILES_KEY, parsed)
-        return parsed
+        const sanitizedProfiles: Profile[] = parsed.profiles.map((p: any) => ({
+          ...p,
+          mode: (p.mode === 'eu_resident' ? 'eu_resident' : 'schengen') as ProfileMode,
+          country: p.country || 'ES',
+          taxTargetDays: p.taxTargetDays || 183,
+          customAbsenceLimit: p.customAbsenceLimit || 182,
+        }))
+        const completeData = { ...parsed, profiles: sanitizedProfiles }
+        await set(STORAGE_PROFILES_KEY, completeData)
+        return completeData
       }
     }
 
@@ -80,13 +137,17 @@ export async function loadAppStorage(defaultName: string = 'My Passport'): Promi
       : []
 
     const initialData: AppStorageData = {
-      version: '2.0',
+      version: '2.1',
       activeProfileId: DEFAULT_PROFILE_ID,
       profiles: [
         {
           id: DEFAULT_PROFILE_ID,
           name: sanitizeString(defaultName, 50),
           color: 'blue',
+          mode: 'schengen',
+          country: 'ES',
+          taxTargetDays: 183,
+          customAbsenceLimit: 182,
           trips: Array.isArray(tripsToMigrate) ? sanitizeTripsList(tripsToMigrate) : [],
         },
       ],
@@ -97,13 +158,17 @@ export async function loadAppStorage(defaultName: string = 'My Passport'): Promi
   } catch (err) {
     console.error('Failed to load storage, returning default state:', err)
     return {
-      version: '2.0',
+      version: '2.1',
       activeProfileId: DEFAULT_PROFILE_ID,
       profiles: [
         {
           id: DEFAULT_PROFILE_ID,
           name: sanitizeString(defaultName, 50),
           color: 'blue',
+          mode: 'schengen',
+          country: 'ES',
+          taxTargetDays: 183,
+          customAbsenceLimit: 182,
           trips: [],
         },
       ],
@@ -112,42 +177,38 @@ export async function loadAppStorage(defaultName: string = 'My Passport'): Promi
 }
 
 /**
- * Save app storage data to both IndexedDB and localStorage
+ * Save multi-profile app data to both IndexedDB and localStorage mirror
  */
 export async function saveAppStorage(data: AppStorageData): Promise<void> {
   try {
     await set(STORAGE_PROFILES_KEY, data)
-  } catch (err) {
-    console.warn('Failed to save to IndexedDB:', err)
-  }
-
-  try {
     localStorage.setItem(STORAGE_PROFILES_KEY, JSON.stringify(data))
   } catch (err) {
-    console.warn('Failed to save to localStorage:', err)
+    console.error('Failed to save app storage:', err)
   }
 }
 
 /**
- * Export full backup containing all profiles
+ * Export complete backup data (all profiles and trips) as a JSON file
  */
-export function exportAllDataToJson(data: AppStorageData): void {
-  const exportPayload = {
-    ...data,
-    exportDate: new Date().toISOString(),
-  }
-
-  const blob = new Blob([JSON.stringify(exportPayload, null, 2)], {
-    type: 'application/json',
-  })
+export function exportBackupData(data: AppStorageData): void {
+  const jsonString = JSON.stringify(data, null, 2)
+  const blob = new Blob([jsonString], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `schengen-full-backup-${new Date().toISOString().slice(0, 10)}.json`
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
+
+  const dateStr = new Date().toISOString().slice(0, 10)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `schengen-suite-backup-${dateStr}.json`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
   URL.revokeObjectURL(url)
+}
+
+/** Alias for BackupModal */
+export function exportAllDataToJson(data: AppStorageData): void {
+  exportBackupData(data)
 }
 
 /**
@@ -162,10 +223,19 @@ export function parseBackupJson(jsonContent: string, currentData: AppStorageData
     const validProfiles: Profile[] = []
     for (const p of parsed.profiles) {
       if (typeof p.id === 'string' && typeof p.name === 'string' && Array.isArray(p.trips)) {
+        const mode: ProfileMode = p.mode === 'eu_resident' ? 'eu_resident' : 'schengen'
+        const country = typeof p.country === 'string' ? sanitizeString(p.country, 10) : 'ES'
+        const taxTargetDays = typeof p.taxTargetDays === 'number' && p.taxTargetDays > 0 ? p.taxTargetDays : 183
+        const customAbsenceLimit = typeof p.customAbsenceLimit === 'number' && p.customAbsenceLimit > 0 ? p.customAbsenceLimit : 182
+
         validProfiles.push({
           id: sanitizeString(p.id, 50),
           name: sanitizeString(p.name, 50),
           color: sanitizeString(p.color || 'blue', 20),
+          mode,
+          country,
+          taxTargetDays,
+          customAbsenceLimit,
           trips: sanitizeTripsList(p.trips),
         })
       }
@@ -173,7 +243,7 @@ export function parseBackupJson(jsonContent: string, currentData: AppStorageData
 
     if (validProfiles.length > 0) {
       return {
-        version: '2.0',
+        version: '2.1',
         activeProfileId: validProfiles[0].id,
         profiles: validProfiles,
       }
@@ -209,8 +279,8 @@ export function sanitizeTripsList(rawList: any[]): Trip[] {
         id: sanitizeString(item.id || `trip_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`, 60),
         entryDate: item.entryDate,
         exitDate: item.exitDate,
-        title: sanitizeString(item.title || '', 100),
-        notes: sanitizeString(item.notes || '', 500),
+        title: item.title ? sanitizeString(item.title, 80) : undefined,
+        notes: item.notes ? sanitizeString(item.notes, 200) : undefined,
         isPlanned: Boolean(item.isPlanned),
       })
     }
