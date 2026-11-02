@@ -1,6 +1,6 @@
-# Schengen Visa Calculator (90/180 Rule) 🇪🇺✈️
+# NayKit — Schengen & EU Residence Suite 🇪🇺✈️
 
-An open-source, privacy-first web application and PWA for tracking, calculating, and planning Schengen area stays (90/180 rule) and Pan-European EU tax residency (183-day rule & Directive 2003/109/EC permanent residence).
+An open-source, privacy-first web application and PWA by [@Naykitin](https://github.com/Naykitin) for tracking, calculating, and planning Schengen area stays (90/180 rule) and Pan-European EU tax residency (183-day rule & Directive 2003/109/EC permanent residence).
 
 > 🌐 **Live Web Application:** [https://schengen-visa-calculator.pages.dev](https://schengen-visa-calculator.pages.dev/)
 
@@ -46,7 +46,7 @@ An open-source, privacy-first web application and PWA for tracking, calculating,
   - Automatically requests browser **Persistent Storage** (`navigator.storage.persist()`) to prevent cache purges.
   - Zero third-party trackers, zero cookies, zero external telemetry. All calculations run client-side.
 - **1-Click Backup & Restore:** Export and import trip records to/from JSON files at any time.
-- **5 European Languages:** Full native translations and localized date formats for English 🇬🇧, German 🇩🇪, French 🇫🇷, Polish 🇵🇱, and Russian 🇷🇺.
+- **5 European Languages:** Full native translations and localized date formats for English 🇬🇧, Ukrainian 🇺🇦, German 🇩🇪, French 🇫🇷, and Polish 🇵🇱.
 
 ---
 
