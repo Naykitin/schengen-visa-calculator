@@ -104,7 +104,7 @@ export const PlannerView: React.FC<PlannerViewProps> = ({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 items-start">
-            <div className="min-w-0">
+            <div className="min-w-0 w-full">
               <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center min-h-[32px] sm:min-h-[36px]">
                 {t.desiredDaysLabel}
               </label>
@@ -115,7 +115,7 @@ export const PlannerView: React.FC<PlannerViewProps> = ({
                   max={90}
                   value={desiredDays}
                   onChange={(e) => setDesiredDays(Math.max(1, Math.min(90, parseInt(e.target.value) || 1)))}
-                  className="w-full min-w-0 h-11 bg-slate-950 border border-slate-800 rounded-xl pl-3.5 pr-14 text-sm font-semibold text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full min-w-0 max-w-full block h-11 bg-slate-950 border border-slate-800 rounded-xl pl-3.5 pr-14 text-sm font-semibold text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
                 />
                 <span className="absolute right-3.5 text-xs text-slate-400 pointer-events-none font-medium">
                   {t.days}
@@ -140,16 +140,51 @@ export const PlannerView: React.FC<PlannerViewProps> = ({
               </div>
             </div>
 
-            <div className="min-w-0">
+            <div className="min-w-0 w-full">
               <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center min-h-[32px] sm:min-h-[36px]">
                 {t.searchFromDateLabel}
               </label>
-              <input
-                type="date"
-                value={searchFromDate}
-                onChange={(e) => setSearchFromDate(e.target.value)}
-                className="w-full min-w-0 h-11 bg-slate-950 border border-slate-800 rounded-xl px-3 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
-              />
+              <div className="relative flex items-center">
+                <input
+                  type="date"
+                  value={searchFromDate}
+                  onChange={(e) => setSearchFromDate(e.target.value)}
+                  className="w-full min-w-0 max-w-full block h-11 bg-slate-950 border border-slate-800 rounded-xl px-3 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
+                />
+              </div>
+              {/* Quick pills for starting date */}
+              <div className="flex flex-wrap gap-1.5 mt-2.5">
+                <button
+                  type="button"
+                  onClick={() => setSearchFromDate(toDateString(new Date()))}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition-all active:scale-95 ${
+                    searchFromDate === toDateString(new Date())
+                      ? 'bg-blue-500/20 text-blue-300 border-blue-500/40'
+                      : 'bg-slate-800/80 text-slate-400 border-slate-700/60 hover:text-slate-200'
+                  }`}
+                >
+                  {t.todayBtn}
+                </button>
+                {[7, 14, 30].map((offset) => {
+                  const targetDate = new Date()
+                  targetDate.setDate(targetDate.getDate() + offset)
+                  const targetStr = toDateString(targetDate)
+                  return (
+                    <button
+                      key={offset}
+                      type="button"
+                      onClick={() => setSearchFromDate(targetStr)}
+                      className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition-all active:scale-95 ${
+                        searchFromDate === targetStr
+                          ? 'bg-blue-500/20 text-blue-300 border-blue-500/40'
+                          : 'bg-slate-800/80 text-slate-400 border-slate-700/60 hover:text-slate-200'
+                      }`}
+                    >
+                      +{offset} {t.days}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
           </div>
 
@@ -219,28 +254,32 @@ export const PlannerView: React.FC<PlannerViewProps> = ({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 items-start">
-            <div className="min-w-0">
+            <div className="min-w-0 w-full">
               <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center min-h-[24px]">
                 {t.entryDateLabel}
               </label>
-              <input
-                type="date"
-                value={checkEntry}
-                onChange={(e) => setCheckEntry(e.target.value)}
-                className="w-full min-w-0 h-11 bg-slate-950 border border-slate-800 rounded-xl px-3 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
-              />
+              <div className="relative flex items-center">
+                <input
+                  type="date"
+                  value={checkEntry}
+                  onChange={(e) => setCheckEntry(e.target.value)}
+                  className="w-full min-w-0 max-w-full block h-11 bg-slate-950 border border-slate-800 rounded-xl px-3 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
+                />
+              </div>
             </div>
 
-            <div className="min-w-0">
+            <div className="min-w-0 w-full">
               <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center min-h-[24px]">
                 {t.exitDateLabel}
               </label>
-              <input
-                type="date"
-                value={checkExit}
-                onChange={(e) => setCheckExit(e.target.value)}
-                className="w-full min-w-0 h-11 bg-slate-950 border border-slate-800 rounded-xl px-3 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
-              />
+              <div className="relative flex items-center">
+                <input
+                  type="date"
+                  value={checkExit}
+                  onChange={(e) => setCheckExit(e.target.value)}
+                  className="w-full min-w-0 max-w-full block h-11 bg-slate-950 border border-slate-800 rounded-xl px-3 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
+                />
+              </div>
             </div>
           </div>
 
