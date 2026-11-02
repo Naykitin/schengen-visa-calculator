@@ -739,8 +739,8 @@ export function App() {
           </a>
         </div>
 
-        <p className="text-[10px] text-slate-600 pt-1">
-          {t.allRightsReserved}
+        <p className="text-[10px] text-slate-500 pt-1">
+          NayKit by <a href="https://github.com/Naykitin" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-slate-200 underline">Naykitin</a> • {t.allRightsReserved}
         </p>
       </footer>
 

@@ -271,8 +271,8 @@ export interface TranslationDictionary {
 
 export const translations: Record<Language, TranslationDictionary> = {
   en: {
-    appTitle: 'Schengen 90/180',
-    appSubtitle: 'Visa & Residence Travel Suite',
+    appTitle: 'NayKit',
+    appSubtitle: 'Schengen & EU Residence Suite',
     backupAndExport: 'Backup & Data',
     aboutRule: 'About 90/180 Rule & Residence',
     addTrip: 'Add Trip',
@@ -505,8 +505,8 @@ export const translations: Record<Language, TranslationDictionary> = {
   },
 
   de: {
-    appTitle: 'Schengen 90/180',
-    appSubtitle: 'Visum & Residenz Reise-Suite',
+    appTitle: 'NayKit',
+    appSubtitle: 'Schengen- & Residenz-Suite',
     backupAndExport: 'Sicherung & Daten',
     aboutRule: 'Über die 90/180-Regel & Residenz',
     addTrip: 'Reise hinzufügen',
@@ -740,8 +740,8 @@ export const translations: Record<Language, TranslationDictionary> = {
   },
 
   fr: {
-    appTitle: 'Schengen 90/180',
-    appSubtitle: 'Calculateur Visa & Résidence',
+    appTitle: 'NayKit',
+    appSubtitle: 'Suite Schengen & Résidence UE',
     backupAndExport: 'Sauvegarde & Données',
     aboutRule: 'Règle 90/180 & Résidence',
     addTrip: 'Ajouter un séjour',
@@ -975,8 +975,8 @@ export const translations: Record<Language, TranslationDictionary> = {
   },
 
   pl: {
-    appTitle: 'Schengen 90/180',
-    appSubtitle: 'Kalkulator Wizy i Rezydentury',
+    appTitle: 'NayKit',
+    appSubtitle: 'Pakiet Schengen i rezydentury UE',
     backupAndExport: 'Kopia zapasowa i dane',
     aboutRule: 'O zasadzie 90/180 i rezydenturze',
     addTrip: 'Dodaj wyjazd',
@@ -1210,8 +1210,8 @@ export const translations: Record<Language, TranslationDictionary> = {
   },
 
   uk: {
-    appTitle: 'Шенген 90/180',
-    appSubtitle: 'Калькулятор візи та резидентства',
+    appTitle: 'NayKit',
+    appSubtitle: 'Шенген та облік резидентства ЄС',
     backupAndExport: 'Резервне копіювання та дані',
     aboutRule: 'Про правило 90/180 та резидентство',
     addTrip: 'Додати поїздку',

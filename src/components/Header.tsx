@@ -48,7 +48,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Left: Logo & Title & Profile Switcher */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 shrink">
           <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-blue-700 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20 border border-blue-400/30 shrink-0">
-            <span className="text-amber-300 font-black text-xs sm:text-sm tracking-tighter">90</span>
+            <span className="text-amber-300 font-black text-xs sm:text-sm tracking-tighter">NK</span>
           </div>
 
           <div className="hidden sm:block">

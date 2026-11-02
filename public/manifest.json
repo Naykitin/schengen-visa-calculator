@@ -1,7 +1,7 @@
 {
-  "name": "Schengen Visa Calculator (90/180)",
-  "short_name": "Schengen 90/180",
-  "description": "Calculate and plan Schengen visa days under the official 90/180 rule with offline storage.",
+  "name": "NayKit — Schengen 90/180 Suite",
+  "short_name": "NayKit",
+  "description": "NayKit: Calculate and plan Schengen visa days (90/180 rule) and EU residence stays with offline storage.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0b0f19",
