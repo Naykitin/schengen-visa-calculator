@@ -70,11 +70,11 @@ export function App() {
   const [lang, setLang] = useState<Language>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('schengen_language') as Language
-      if (saved && ['en', 'ru', 'de', 'fr', 'pl'].includes(saved)) {
+      if (saved && ['en', 'uk', 'de', 'fr', 'pl'].includes(saved)) {
         return saved
       }
       const nav = navigator.language?.toLowerCase() || ''
-      if (nav.startsWith('ru')) return 'ru'
+      if (nav.startsWith('uk')) return 'uk'
       if (nav.startsWith('de')) return 'de'
       if (nav.startsWith('fr')) return 'fr'
       if (nav.startsWith('pl')) return 'pl'
@@ -445,16 +445,16 @@ export function App() {
         id: 'sample_1',
         entryDate: toDateString(trip1Start),
         exitDate: toDateString(trip1End),
-        title: lang === 'ru' ? 'Италия (Рим, Флоренция)' : 'Italy (Rome, Florence)',
-        notes: lang === 'ru' ? 'Отпуск 15 дней' : 'Vacation 15 days',
+        title: lang === 'uk' ? 'Італія (Рим, Флоренція)' : 'Italy (Rome, Florence)',
+        notes: lang === 'uk' ? 'Відпустка 15 днів' : 'Vacation 15 days',
         isPlanned: false,
       },
       {
         id: 'sample_2',
         entryDate: toDateString(trip2Start),
         exitDate: toDateString(trip2End),
-        title: lang === 'ru' ? 'Германия (Берлин)' : 'Germany (Berlin)',
-        notes: lang === 'ru' ? 'Конференция 21 день' : 'Conference & stay 21 days',
+        title: lang === 'uk' ? 'Німеччина (Берлін)' : 'Germany (Berlin)',
+        notes: lang === 'uk' ? 'Конференція 21 день' : 'Conference & stay 21 days',
         isPlanned: false,
       },
     ]

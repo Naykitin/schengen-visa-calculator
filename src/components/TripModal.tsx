@@ -149,8 +149,8 @@ export const TripModal: React.FC<TripModalProps> = ({
               </h3>
               <p className="text-xs text-slate-400">
                 {isResidentMode
-                  ? lang === 'ru'
-                    ? `Выезд за пределы страны проживания (${countryName})`
+                  ? lang === 'uk'
+                    ? `Виїзд за межі країни проживання (${countryName})`
                     : lang === 'de'
                     ? `Auslandsaufenthalt außerhalb von ${countryName}`
                     : lang === 'fr'
@@ -184,8 +184,8 @@ export const TripModal: React.FC<TripModalProps> = ({
             <div className="min-w-0">
               <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center min-h-[20px]">
                 {isResidentMode
-                  ? lang === 'ru'
-                    ? 'Дата выезда'
+                  ? lang === 'uk'
+                    ? 'Дата виїзду'
                     : lang === 'de'
                     ? 'Abreisedatum'
                     : lang === 'fr'
@@ -207,8 +207,8 @@ export const TripModal: React.FC<TripModalProps> = ({
             <div className="min-w-0">
               <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center min-h-[20px]">
                 {isResidentMode
-                  ? lang === 'ru'
-                    ? 'Дата возврата'
+                  ? lang === 'uk'
+                    ? 'Дата повернення'
                     : lang === 'de'
                     ? 'Rückreisedatum'
                     : lang === 'fr'
@@ -248,8 +248,8 @@ export const TripModal: React.FC<TripModalProps> = ({
               <span className="text-slate-400 flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-blue-400 shrink-0" />
                 {isResidentMode
-                  ? lang === 'ru'
-                    ? 'Срок отсутствия:'
+                  ? lang === 'uk'
+                    ? 'Термін відсутності:'
                     : lang === 'de'
                     ? 'Abwesenheitsdauer:'
                     : lang === 'fr'
@@ -257,8 +257,8 @@ export const TripModal: React.FC<TripModalProps> = ({
                     : lang === 'pl'
                     ? 'Czas nieobecności:'
                     : 'Absence duration:'
-                  : lang === 'ru'
-                  ? 'Длительность пребывания:'
+                  : lang === 'uk'
+                  ? 'Тривалість перебування:'
                   : 'Stay duration:'}
               </span>
               <span className="font-bold text-slate-100 flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-blue-500/15 border border-blue-500/30 text-blue-300">
@@ -274,8 +274,8 @@ export const TripModal: React.FC<TripModalProps> = ({
               <div className="flex items-center gap-2 font-bold text-amber-300">
                 <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
                 <span>
-                  {lang === 'ru'
-                    ? 'Внимание: выезд длится более 6 месяцев (183 дней)!'
+                  {lang === 'uk'
+                    ? 'Увага: виїзд триває понад 6 місяців (183 днів)!'
                     : lang === 'de'
                     ? 'Achtung: Einzelabwesenheit überschreitet 6 Monate (183 Tage)!'
                     : lang === 'fr'
@@ -286,8 +286,8 @@ export const TripModal: React.FC<TripModalProps> = ({
                 </span>
               </div>
               <p className="text-[11px] text-amber-300/80 leading-relaxed">
-                {lang === 'ru'
-                  ? 'Непрерывное отсутствие более 6 месяцев подряд может поставить под угрозу статус ПМЖ ЕС (Директива 2003/109/EC) или национальный вид на жительство.'
+                {lang === 'uk'
+                  ? 'Безперервна відсутність понад 6 місяців поспіль може поставити під загрозу статус ПМП ЄС (Директива 2003/109/EC) або національну посвідку на проживання.'
                   : 'Continuous absence exceeding 6 consecutive months can jeopardize EU long-term residency status (Directive 2003/109/EC).'}
               </p>
             </div>
@@ -314,8 +314,8 @@ export const TripModal: React.FC<TripModalProps> = ({
               type="text"
               placeholder={
                 isResidentMode
-                  ? lang === 'ru'
-                    ? 'Например: Германия (Берлин), Отпуск в Риме'
+                  ? lang === 'uk'
+                    ? 'Наприклад: Німеччина (Берлін), Відпустка в Римі'
                     : 'e.g. Germany visit, Vacation in Italy'
                   : t.titlePlaceholder
               }
@@ -376,8 +376,8 @@ export const TripModal: React.FC<TripModalProps> = ({
                 </span>
                 <span className="text-slate-400 text-[11px] block mt-0.5">
                   {isResidentMode
-                    ? lang === 'ru'
-                      ? 'Позволяет смоделировать влияние выезда на 183 дня налогового резидентства'
+                    ? lang === 'uk'
+                      ? 'Дозволяє змоделювати вплив виїзду на 183 дні податкового резидентства'
                       : 'Forecasts impact on 183-day tax residency without affecting historical records'
                     : t.plannedCheckboxSubtitle}
                 </span>
@@ -408,8 +408,8 @@ export const TripModal: React.FC<TripModalProps> = ({
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin text-white" />
                   <span>
-                    {lang === 'ru'
-                      ? 'Сохранение...'
+                    {lang === 'uk'
+                      ? 'Збереження...'
                       : lang === 'de'
                       ? 'Speichern...'
                       : lang === 'fr'
@@ -423,8 +423,8 @@ export const TripModal: React.FC<TripModalProps> = ({
                 <>
                   <Check className="w-4 h-4 text-white" />
                   <span>
-                    {lang === 'ru'
-                      ? 'Сохранено!'
+                    {lang === 'uk'
+                      ? 'Збережено!'
                       : lang === 'de'
                       ? 'Gespeichert!'
                       : lang === 'fr'

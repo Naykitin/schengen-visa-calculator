@@ -57,8 +57,14 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
   const calendarDays = eachDayOfInterval({ start: startDate, end: endDate })
 
-  const weekDayNames = lang === 'ru' 
-    ? ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
+  const weekDayNames = lang === 'uk'
+    ? ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']
+    : lang === 'de'
+    ? ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
+    : lang === 'fr'
+    ? ['Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa', 'Di']
+    : lang === 'pl'
+    ? ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb', 'Nd']
     : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
   // Swipe gesture for mobile month navigation

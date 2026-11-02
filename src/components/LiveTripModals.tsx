@@ -140,8 +140,8 @@ export const StartOngoingTripModal: React.FC<StartOngoingTripModalProps> = ({
             <input
               type="text"
               placeholder={
-                lang === 'ru'
-                  ? 'Конкретный город или цель (необязательно)'
+                lang === 'uk'
+                  ? 'Конкретне місто або мета (необовʼязково)'
                   : 'City or purpose (optional, e.g. Berlin, Holiday)'
               }
               value={customTitle}
@@ -154,7 +154,7 @@ export const StartOngoingTripModal: React.FC<StartOngoingTripModalProps> = ({
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5 text-emerald-400" />
-              <span>{isResidentMode ? (lang === 'ru' ? 'Дата выезда' : 'Departure Date') : t.entryDateLabel}</span>
+              <span>{isResidentMode ? (lang === 'uk' ? 'Дата виїзду' : 'Departure Date') : t.entryDateLabel}</span>
             </label>
             <div className="flex gap-2 mb-2">
               <button
@@ -166,7 +166,7 @@ export const StartOngoingTripModal: React.FC<StartOngoingTripModalProps> = ({
                     : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-white'
                 }`}
               >
-                {lang === 'ru' ? 'Сегодня' : 'Today'}
+                {lang === 'uk' ? 'Сьогодні' : 'Today'}
               </button>
               <button
                 type="button"
@@ -177,7 +177,7 @@ export const StartOngoingTripModal: React.FC<StartOngoingTripModalProps> = ({
                     : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-white'
                 }`}
               >
-                {lang === 'ru' ? 'Вчера' : 'Yesterday'}
+                {lang === 'uk' ? 'Вчора' : 'Yesterday'}
               </button>
             </div>
             <input
@@ -294,8 +294,8 @@ export const PickReturnDateModal: React.FC<PickReturnDateModalProps> = ({
               </h3>
               <p className="text-xs text-slate-400">
                 {isResidentMode
-                  ? lang === 'ru'
-                    ? `Поездка началась: ${formattedEntry}`
+                  ? lang === 'uk'
+                    ? `Поїздка розпочалася: ${formattedEntry}`
                     : `Trip started: ${formattedEntry}`
                   : `Entered Schengen: ${formattedEntry}`}
               </p>
@@ -313,8 +313,8 @@ export const PickReturnDateModal: React.FC<PickReturnDateModalProps> = ({
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1.5">
               {isResidentMode
-                ? lang === 'ru'
-                  ? 'Когда вы вернулись в страну проживания?'
+                ? lang === 'uk'
+                  ? 'Коли ви повернулися до країни проживання?'
                   : 'When did you return to your residence country?'
                 : 'When did you depart Schengen?'}
             </label>
@@ -328,7 +328,7 @@ export const PickReturnDateModal: React.FC<PickReturnDateModalProps> = ({
                     : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-white'
                 }`}
               >
-                {lang === 'ru' ? 'Сегодня' : 'Today'}
+                {lang === 'uk' ? 'Сьогодні' : 'Today'}
               </button>
               {yesterdayStr >= minDate && (
                 <button
@@ -340,7 +340,7 @@ export const PickReturnDateModal: React.FC<PickReturnDateModalProps> = ({
                       : 'bg-slate-950 text-slate-400 border-slate-800 hover:text-white'
                   }`}
                 >
-                  {lang === 'ru' ? 'Вчера' : 'Yesterday'}
+                  {lang === 'uk' ? 'Вчора' : 'Yesterday'}
                 </button>
               )}
             </div>
