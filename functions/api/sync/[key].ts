@@ -35,8 +35,7 @@ async function ensureVaultsTable(db: D1Database): Promise<void> {
       `CREATE TABLE IF NOT EXISTS vaults (
         sync_key TEXT PRIMARY KEY,
         payload TEXT NOT NULL,
-        updated_at INTEGER NOT NULL,
-        created_at INTEGER NOT NULL
+        updated_at INTEGER NOT NULL
       )`
     ).run()
     tableEnsured = true
@@ -152,17 +151,16 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
       )
     }
 
-    const now = Date.now()
     const payloadJsonString = JSON.stringify(payload)
 
     await env.DB.prepare(
-      `INSERT INTO vaults (sync_key, payload, updated_at, created_at)
-       VALUES (?, ?, ?, ?)
+      `INSERT INTO vaults (sync_key, payload, updated_at)
+       VALUES (?, ?, ?)
        ON CONFLICT(sync_key) DO UPDATE SET
          payload = excluded.payload,
          updated_at = excluded.updated_at`
     )
-      .bind(key, payloadJsonString, updatedAt, now)
+      .bind(key, payloadJsonString, updatedAt)
       .run()
 
     return new Response(
