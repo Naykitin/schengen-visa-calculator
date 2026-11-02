@@ -206,6 +206,8 @@ export interface TranslationDictionary {
   browserPersistenceStandard: string
   enablePersistenceBtn: string
   persistenceProtectedBadge: string
+  persistenceGrantedToast: string
+  persistenceDeniedHint: string
   fileBackupSectionTitle: string
   exportFileBtn: string
   importFileBtn: string
@@ -401,6 +403,8 @@ export const translations: Record<Language, TranslationDictionary> = {
     browserPersistenceStandard: 'Standard Storage',
     enablePersistenceBtn: 'Enable Persistent Storage',
     persistenceProtectedBadge: 'Protected',
+    persistenceGrantedToast: 'Persistent storage granted! Your trips are protected from automatic browser eviction.',
+    persistenceDeniedHint: 'Browser requires adding the app to Home Screen (or bookmarking) before granting persistence. Your trips are already safe in IndexedDB and Cloud Sync.',
     fileBackupSectionTitle: 'File Backup (JSON)',
     exportFileBtn: 'Export JSON Backup',
     importFileBtn: 'Import JSON Backup',
@@ -600,6 +604,8 @@ export const translations: Record<Language, TranslationDictionary> = {
     browserPersistenceStandard: 'Standardspeicher',
     enablePersistenceBtn: 'Dauerhaften Speicher aktivieren',
     persistenceProtectedBadge: 'Geschützt',
+    persistenceGrantedToast: 'Dauerhafter Speicher aktiv! Ihre Daten sind vor automatischer Bereinigung geschützt.',
+    persistenceDeniedHint: 'Der Browser erfordert das Hinzufügen zum Startbildschirm oder Lesezeichen für dauerhaften Speicher. Ihre Reisen sind bereits lokal und in Cloud Sync gesichert.',
     fileBackupSectionTitle: 'Datei-Sicherung (JSON)',
     exportFileBtn: 'JSON-Sicherung exportieren',
     importFileBtn: 'JSON-Sicherung importieren',
@@ -799,6 +805,8 @@ export const translations: Record<Language, TranslationDictionary> = {
     browserPersistenceStandard: 'Stockage standard',
     enablePersistenceBtn: 'Activer le stockage persistant',
     persistenceProtectedBadge: 'Protégé',
+    persistenceGrantedToast: 'Stockage persistant accordé ! Vos données sont protégées contre le nettoyage automatique.',
+    persistenceDeniedHint: "Le navigateur nécessite d'ajouter l'application à l'écran d'accueil pour accorder la persistance. Vos données sont déjà sécurisées localement et dans Cloud Sync.",
     fileBackupSectionTitle: 'Sauvegarde sur fichier (JSON)',
     exportFileBtn: 'Exporter la sauvegarde JSON',
     importFileBtn: 'Importer la sauvegarde JSON',
@@ -998,6 +1006,8 @@ export const translations: Record<Language, TranslationDictionary> = {
     browserPersistenceStandard: 'Pamięć standardowa',
     enablePersistenceBtn: 'Włącz trwałą pamięć',
     persistenceProtectedBadge: 'Chronione',
+    persistenceGrantedToast: 'Trwała pamięć przyznana! Twoje dane są chronione przed automatycznym usunięciem.',
+    persistenceDeniedHint: 'Przeglądarka wymaga dodania aplikacji do ekranu głównego przed przyznaniem trwałej pamięci. Twoje podróże są już bezpieczne w pamięci lokalnej i Cloud Sync.',
     fileBackupSectionTitle: 'Kopia w pliku (JSON)',
     exportFileBtn: 'Eksportuj kopię JSON',
     importFileBtn: 'Importuj kopię JSON',
@@ -1197,6 +1207,8 @@ export const translations: Record<Language, TranslationDictionary> = {
     browserPersistenceStandard: 'Стандартный кэш',
     enablePersistenceBtn: 'Закрепить в памяти',
     persistenceProtectedBadge: 'Защищено',
+    persistenceGrantedToast: 'Защита включена! Браузер не удалит ваши данные при автоматической очистке кэша.',
+    persistenceDeniedHint: 'Браузер требует добавить приложение на экран «Домой» (PWA) или в закладки для бессрочного закрепления. Ваши данные уже надёжно сохранены в локальной базе и Cloud Sync.',
     fileBackupSectionTitle: 'Файловый бэкап (JSON)',
     exportFileBtn: 'Экспорт в файл',
     importFileBtn: 'Импорт из файла',

@@ -5,6 +5,8 @@ import {
   Cloud,
   Download,
   HardDrive,
+  Info,
+  RefreshCw,
   Trash2,
   Upload,
   X,
@@ -38,6 +40,12 @@ export const BackupModal: React.FC<BackupModalProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [importStatus, setImportStatus] = useState<string | null>(null)
   const [isPersisted, setIsPersisted] = useState<boolean | null>(null)
+  const [isRequestingPersistence, setIsRequestingPersistence] = useState(false)
+  const [persistenceFeedback, setPersistenceFeedback] = useState<{
+    type: 'success' | 'info' | 'warning'
+    message: string
+    hint?: string
+  } | null>(null)
   const [confirmClear, setConfirmClear] = useState<boolean>(false)
 
   const totalTripsCount = data.profiles.reduce((acc, p) => acc + p.trips.length, 0)
@@ -45,6 +53,9 @@ export const BackupModal: React.FC<BackupModalProps> = ({
   useEffect(() => {
     if (isOpen && typeof navigator !== 'undefined' && navigator.storage?.persisted) {
       navigator.storage.persisted().then(setIsPersisted).catch(() => {})
+    }
+    if (!isOpen) {
+      setPersistenceFeedback(null)
     }
   }, [isOpen])
 
@@ -89,9 +100,48 @@ export const BackupModal: React.FC<BackupModalProps> = ({
   }
 
   const handleRequestPersistence = async () => {
-    const granted = await requestPersistentStorage()
-    setIsPersisted(granted)
+    setIsRequestingPersistence(true)
+    setPersistenceFeedback(null)
     triggerHaptic('light')
+
+    try {
+      if (typeof window === 'undefined' || !navigator.storage || !navigator.storage.persist) {
+        setIsPersisted(false)
+        setPersistenceFeedback({
+          type: 'info',
+          message: t.browserPersistenceStandard,
+          hint: t.persistenceDeniedHint,
+        })
+        return
+      }
+
+      const granted = await requestPersistentStorage()
+      setIsPersisted(granted)
+
+      if (granted) {
+        triggerHaptic('success')
+        setPersistenceFeedback({
+          type: 'success',
+          message: t.persistenceGrantedToast,
+        })
+      } else {
+        triggerHaptic('warning')
+        setPersistenceFeedback({
+          type: 'info',
+          message: t.browserPersistenceStandard,
+          hint: t.persistenceDeniedHint,
+        })
+      }
+    } catch (err: any) {
+      console.warn('Could not request persistent storage:', err)
+      setPersistenceFeedback({
+        type: 'warning',
+        message: err.message || 'Browser declined persistence request',
+        hint: t.persistenceDeniedHint,
+      })
+    } finally {
+      setIsRequestingPersistence(false)
+    }
   }
 
   return (
@@ -123,28 +173,64 @@ export const BackupModal: React.FC<BackupModalProps> = ({
           )}
 
           {/* Persistent storage status */}
-          <div className="p-3.5 bg-slate-950/60 border border-slate-800 rounded-2xl flex items-center justify-between">
-            <div className="space-y-0.5">
-              <span className="text-xs font-semibold text-slate-200 block">
-                {t.browserPersistenceTitle}
-              </span>
-              <span className="text-[11px] text-slate-400">
-                {isPersisted ? t.browserPersistenceActive : t.browserPersistenceStandard}
-              </span>
+          <div className="space-y-2">
+            <div className="p-3.5 bg-slate-950/60 border border-slate-800 rounded-2xl flex items-center justify-between gap-3">
+              <div className="space-y-0.5 min-w-0">
+                <span className="text-xs font-semibold text-slate-200 block truncate">
+                  {t.browserPersistenceTitle}
+                </span>
+                <span className="text-[11px] text-slate-400 block truncate">
+                  {isPersisted ? t.browserPersistenceActive : t.browserPersistenceStandard}
+                </span>
+              </div>
+
+              {!isPersisted && (
+                <button
+                  type="button"
+                  onClick={handleRequestPersistence}
+                  disabled={isRequestingPersistence}
+                  className="flex items-center gap-1.5 text-[11px] font-semibold bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-blue-400 px-3 py-1.5 rounded-xl border border-slate-700 transition-all min-h-[36px] shrink-0 active:scale-95"
+                >
+                  {isRequestingPersistence ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-400" />
+                      <span>...</span>
+                    </>
+                  ) : (
+                    <span>{t.enablePersistenceBtn}</span>
+                  )}
+                </button>
+              )}
+              {isPersisted && (
+                <span className="flex items-center gap-1 text-[11px] text-emerald-400 font-semibold shrink-0">
+                  <Check className="w-3.5 h-3.5" /> {t.persistenceProtectedBadge}
+                </span>
+              )}
             </div>
 
-            {!isPersisted && (
-              <button
-                onClick={handleRequestPersistence}
-                className="text-[11px] font-semibold bg-slate-800 hover:bg-slate-700 text-blue-400 px-3 py-1.5 rounded-xl border border-slate-700 transition-all min-h-[36px]"
+            {/* Persistent storage feedback & browser guidance */}
+            {persistenceFeedback && (
+              <div
+                className={`p-3.5 rounded-2xl border text-xs animate-fade-in space-y-1 ${
+                  persistenceFeedback.type === 'success'
+                    ? 'bg-emerald-950/25 border-emerald-500/30 text-emerald-200'
+                    : 'bg-blue-950/30 border-blue-500/30 text-blue-200'
+                }`}
               >
-                {t.enablePersistenceBtn}
-              </button>
-            )}
-            {isPersisted && (
-              <span className="flex items-center gap-1 text-[11px] text-emerald-400 font-semibold">
-                <Check className="w-3.5 h-3.5" /> {t.persistenceProtectedBadge}
-              </span>
+                <div className="flex items-center gap-1.5 font-bold">
+                  {persistenceFeedback.type === 'success' ? (
+                    <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                  ) : (
+                    <Info className="w-4 h-4 text-blue-400 shrink-0" />
+                  )}
+                  <span>{persistenceFeedback.message}</span>
+                </div>
+                {persistenceFeedback.hint && (
+                  <p className="text-[11px] text-slate-300/90 leading-relaxed pl-5">
+                    {persistenceFeedback.hint}
+                  </p>
+                )}
+              </div>
             )}
           </div>
 
