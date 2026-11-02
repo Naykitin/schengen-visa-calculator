@@ -90,7 +90,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 {t.profilesTitle}
               </h3>
               <p className="text-xs text-slate-400">
-                Schengen Visitors & EU Residents (TIE / Autónomo)
+                Schengen Visitors & EU Residents (All 27 EU Member States)
               </p>
             </div>
           </div>
@@ -181,7 +181,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                     {isResident ? (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 text-[11px] font-medium">
                         <span>{countryObj.flag}</span>
-                        <span>Resident of {countryObj.name} (183d tax)</span>
+                        <span>{t.residentHeaderBadge(countryObj.name)}</span>
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-300 border border-blue-500/30 text-[11px] font-medium">
@@ -196,7 +196,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                     onClick={() => toggleProfileMode(profile)}
                     className="text-[11px] text-slate-400 hover:text-slate-200 underline underline-offset-2 transition-colors"
                   >
-                    Switch to {isResident ? 'Schengen 90/180' : 'Resident'}
+                    {isResident ? t.switchToSchengenBtn : t.switchToResidentBtn}
                   </button>
                 </div>
               </div>
