@@ -42,7 +42,8 @@ export interface PermanentResidenceSummary {
 export function calculateResidenceYearSummary(
   trips: Trip[],
   year: number = new Date().getFullYear(),
-  taxTargetDays: number = 183
+  taxTargetDays: number = 183,
+  referenceDateStr?: string
 ): ResidenceYearSummary {
   const isLeap = isLeapYear(new Date(year, 0, 1))
   const totalDaysInYear = isLeap ? 366 : 365
@@ -52,10 +53,17 @@ export function calculateResidenceYearSummary(
   const abroadDaysInYear = new Set<string>()
   const tripsInYear: Array<{ trip: Trip; daysInThisYear: number }> = []
   let longestSingleTripDays = 0
+  const todayRef = referenceDateStr ? fromDateString(referenceDateStr) : fromDateString(toDateString(new Date()))
 
   for (const trip of trips) {
     const tripStart = fromDateString(trip.entryDate)
-    const tripEnd = fromDateString(trip.exitDate)
+    let tripEnd: Date
+    if (trip.ongoing) {
+      tripEnd = isAfter(tripStart, todayRef) ? tripStart : todayRef
+    } else {
+      tripEnd = fromDateString(trip.exitDate)
+    }
+
     const totalTripDuration = differenceInCalendarDays(tripEnd, tripStart) + 1
     if (totalTripDuration > longestSingleTripDays) {
       longestSingleTripDays = totalTripDuration
@@ -121,7 +129,9 @@ export function calculatePermanentResidenceSummary(
 
   for (const trip of trips) {
     const tripStart = fromDateString(trip.entryDate)
-    const tripEnd = fromDateString(trip.exitDate)
+    const tripEnd = trip.ongoing
+      ? (isAfter(tripStart, refDate) ? tripStart : refDate)
+      : fromDateString(trip.exitDate)
 
     const overlapStart = isBefore(tripStart, fiveYearsAgo) ? fiveYearsAgo : tripStart
     const overlapEnd = isAfter(tripEnd, refDate) ? refDate : tripEnd

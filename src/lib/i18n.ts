@@ -134,6 +134,33 @@ export interface TranslationDictionary {
   switchToResidentBtn: string
   switchToSchengenBtn: string
 
+  // Live Trip Tracker ("Currently Abroad / I Have Returned")
+  liveStayTitle: string
+  currentlyAbroadLive: (countryName?: string) => string
+  currentlyInSchengenLive: (countryName?: string) => string
+  dayCountSince: (day: number, date: string) => string
+  safeDaysRemainingAbroad: (days: number) => string
+  returnedTodayBtn: string
+  departedSchengenTodayBtn: string
+  pickReturnDateBtn: string
+  pickDepartureDateBtn: string
+  iAmLeavingNowBtn: string
+  iEnteredSchengenNowBtn: string
+  ongoingTripBadge: string
+  ongoingCheckboxTitle: string
+  ongoingCheckboxSubtitle: string
+  ongoingDynamicDurationHint: string
+  destinationCountryLabel: string
+  selectCountryPrompt: string
+  returnDateModalTitle: string
+  confirmReturnBtn: string
+  presentDate: string
+  quickStartAbroadTitle: string
+  quickStartAbroadDesc: string
+  quickStartSchengenTitle: string
+  quickStartSchengenDesc: string
+  startTrackingBtn: string
+
   // Tabs & Navigation
   tabTrips: string
   tabPlanner: string
@@ -337,6 +364,33 @@ export const translations: Record<Language, TranslationDictionary> = {
     switchToResidentBtn: 'Switch to EU Resident',
     switchToSchengenBtn: 'Switch to Schengen 90/180',
 
+    // Live Trip Tracker
+    liveStayTitle: 'Live Trip Tracker',
+    currentlyAbroadLive: (countryName?: string) => `Currently abroad: ${countryName || 'Outside home country'}`,
+    currentlyInSchengenLive: (countryName?: string) => `Currently in Schengen: ${countryName || 'Schengen Area'}`,
+    dayCountSince: (day: number, date: string) => `Day ${day} (since ${date})`,
+    safeDaysRemainingAbroad: (days: number) => `Safe absence remaining: ${days} days`,
+    returnedTodayBtn: '🛬 I returned today',
+    departedSchengenTodayBtn: '🛫 I departed today',
+    pickReturnDateBtn: 'Returned on another date...',
+    pickDepartureDateBtn: 'Departed on another date...',
+    iAmLeavingNowBtn: '🛫 I am currently abroad / leaving now',
+    iEnteredSchengenNowBtn: '🛬 I entered Schengen / currently here',
+    ongoingTripBadge: 'Ongoing',
+    ongoingCheckboxTitle: 'Ongoing trip (no return date yet)',
+    ongoingCheckboxSubtitle: 'Counts days dynamically up to today until you log your return',
+    ongoingDynamicDurationHint: 'Open-ended — counts dynamically up to today',
+    destinationCountryLabel: 'Destination Country',
+    selectCountryPrompt: 'Select country or type custom note',
+    returnDateModalTitle: 'Confirm Return Date',
+    confirmReturnBtn: 'Confirm Return',
+    presentDate: 'Present',
+    quickStartAbroadTitle: 'Leaving Home Country',
+    quickStartAbroadDesc: 'Track days spent abroad without knowing your return date in advance.',
+    quickStartSchengenTitle: 'Entered Schengen Area',
+    quickStartSchengenDesc: 'Track live Schengen stay without a fixed departure date.',
+    startTrackingBtn: 'Start Live Trip',
+
     tabTrips: 'Trips',
     tabPlanner: 'Planner',
     tabCalendar: 'Calendar',
@@ -537,6 +591,33 @@ export const translations: Record<Language, TranslationDictionary> = {
     singleTripViolationAlert: 'Warnung: Eine einzelne Reise überschritt 6 Monate ununterbrochene Abwesenheit.',
     switchToResidentBtn: 'Zu EU-Residenz wechseln',
     switchToSchengenBtn: 'Zu Schengen 90/180 wechseln',
+
+    // Live Trip Tracker
+    liveStayTitle: 'Live-Reisetracker',
+    currentlyAbroadLive: (countryName?: string) => `Aktuell im Ausland: ${countryName || 'Außerhalb des Wohnsitzlandes'}`,
+    currentlyInSchengenLive: (countryName?: string) => `Aktuell im Schengen-Raum: ${countryName || 'Schengen-Raum'}`,
+    dayCountSince: (day: number, date: string) => `Tag ${day} (seit ${date})`,
+    safeDaysRemainingAbroad: (days: number) => `Sichere verbleibende Abwesenheit: ${days} Tage`,
+    returnedTodayBtn: '🛬 Ich bin heute zurückgekehrt',
+    departedSchengenTodayBtn: '🛫 Ich bin heute ausgereist',
+    pickReturnDateBtn: 'Anderes Rückreisedatum wählen...',
+    pickDepartureDateBtn: 'Anderes Ausreisedatum wählen...',
+    iAmLeavingNowBtn: '🛫 Ich bin aktuell im Ausland / verreise jetzt',
+    iEnteredSchengenNowBtn: '🛬 Ich bin im Schengen-Raum eingereist',
+    ongoingTripBadge: 'Laufend',
+    ongoingCheckboxTitle: 'Laufende Reise (Rückreisedatum noch offen)',
+    ongoingCheckboxSubtitle: 'Zählt Tage dynamisch bis heute, bis Sie Ihre Rückkehr protokollieren',
+    ongoingDynamicDurationHint: 'Offenes Ende — zählt dynamisch bis heute',
+    destinationCountryLabel: 'Zielland',
+    selectCountryPrompt: 'Land auswählen oder Notiz eingeben',
+    returnDateModalTitle: 'Rückreisedatum bestätigen',
+    confirmReturnBtn: 'Rückkehr bestätigen',
+    presentDate: 'Heute',
+    quickStartAbroadTitle: 'Auslandsaufenthalt erfassen',
+    quickStartAbroadDesc: 'Zählen Sie Abwesenheitstage in Echtzeit, auch ohne festes Rückreisedatum.',
+    quickStartSchengenTitle: 'Einreise in Schengen-Raum',
+    quickStartSchengenDesc: 'Erfassen Sie Ihren Schengen-Aufenthalt in Echtzeit ohne festes Ausreisedatum.',
+    startTrackingBtn: 'Live-Reise starten',
 
     tabTrips: 'Reisen',
     tabPlanner: 'Planer',
@@ -739,6 +820,33 @@ export const translations: Record<Language, TranslationDictionary> = {
     switchToResidentBtn: 'Passer en mode Résident UE',
     switchToSchengenBtn: 'Passer en mode Schengen 90/180',
 
+    // Live Trip Tracker
+    liveStayTitle: 'Suivi de voyage en direct',
+    currentlyAbroadLive: (countryName?: string) => `Actuellement à l'étranger : ${countryName || 'Hors du pays de résidence'}`,
+    currentlyInSchengenLive: (countryName?: string) => `Actuellement dans l'espace Schengen : ${countryName || 'Espace Schengen'}`,
+    dayCountSince: (day: number, date: string) => `Jour ${day} (depuis le ${date})`,
+    safeDaysRemainingAbroad: (days: number) => `Solde d'absence sécurisé : ${days} jours`,
+    returnedTodayBtn: "🛬 Je suis rentré(e) aujourd'hui",
+    departedSchengenTodayBtn: "🛫 J'ai quitté Schengen aujourd'hui",
+    pickReturnDateBtn: 'Choisir une autre date de retour...',
+    pickDepartureDateBtn: 'Choisir une autre date de départ...',
+    iAmLeavingNowBtn: "🛫 Je suis actuellement à l'étranger / je pars",
+    iEnteredSchengenNowBtn: "🛬 Je suis entré(e) dans l'espace Schengen",
+    ongoingTripBadge: 'En cours',
+    ongoingCheckboxTitle: 'Voyage en cours (date de retour inconnue)',
+    ongoingCheckboxSubtitle: "Comptabilise les jours en temps réel jusqu'à aujourd'hui jusqu'à votre retour",
+    ongoingDynamicDurationHint: "Date ouverte — calcul dynamique jusqu'à aujourd'hui",
+    destinationCountryLabel: 'Pays de destination',
+    selectCountryPrompt: 'Sélectionner un pays ou saisir une note',
+    returnDateModalTitle: 'Confirmer la date de retour',
+    confirmReturnBtn: 'Confirmer le retour',
+    presentDate: 'À ce jour',
+    quickStartAbroadTitle: "Départ à l'étranger",
+    quickStartAbroadDesc: "Suivez vos jours d'absence en temps réel sans date de retour fixée à l'avance.",
+    quickStartSchengenTitle: "Entrée dans l'espace Schengen",
+    quickStartSchengenDesc: 'Suivez votre séjour Schengen en direct sans date de sortie fixée.',
+    startTrackingBtn: 'Démarrer le suivi en direct',
+
     tabTrips: 'Séjours',
     tabPlanner: 'Planificateur',
     tabCalendar: 'Calendrier',
@@ -940,6 +1048,33 @@ export const translations: Record<Language, TranslationDictionary> = {
     switchToResidentBtn: 'Przełącz na Rezydent UE',
     switchToSchengenBtn: 'Przełącz na Schengen 90/180',
 
+    // Live Trip Tracker
+    liveStayTitle: 'Śledzenie podróży na żywo',
+    currentlyAbroadLive: (countryName?: string) => `Obecnie za granicą: ${countryName || 'Poza krajem zamieszkania'}`,
+    currentlyInSchengenLive: (countryName?: string) => `Obecnie w strefie Schengen: ${countryName || 'Strefa Schengen'}`,
+    dayCountSince: (day: number, date: string) => `${day}. dzień (od ${date})`,
+    safeDaysRemainingAbroad: (days: number) => `Bezpieczny pozostały limit wyjazdu: ${days} dni`,
+    returnedTodayBtn: '🛬 Wróciłem(-am) dzisiaj',
+    departedSchengenTodayBtn: '🛫 Opuściłem(-am) Schengen dzisiaj',
+    pickReturnDateBtn: 'Wybierz inną datę powrotu...',
+    pickDepartureDateBtn: 'Wybierz inną datę wyjazdu...',
+    iAmLeavingNowBtn: '🛫 Jestem obecnie za granicą / wyjeżdżam',
+    iEnteredSchengenNowBtn: '🛬 Wjechałem(-am) do strefy Schengen',
+    ongoingTripBadge: 'W toku',
+    ongoingCheckboxTitle: 'Podróż w toku (brak ustalonej daty powrotu)',
+    ongoingCheckboxSubtitle: 'Liczy dni dynamicznie do dzisiaj, dopóki nie zarejestrujesz powrotu',
+    ongoingDynamicDurationHint: 'Otwarty termin — dynamiczne liczenie do dzisiaj',
+    destinationCountryLabel: 'Kraj docelowy',
+    selectCountryPrompt: 'Wybierz kraj lub wpisz notatkę',
+    returnDateModalTitle: 'Potwierdź datę powrotu',
+    confirmReturnBtn: 'Potwierdź powrót',
+    presentDate: 'Do chwili obecnej',
+    quickStartAbroadTitle: 'Wyjazd za granicę',
+    quickStartAbroadDesc: 'Śledź dni nieobecności w czasie rzeczywistym bez ustalonej wcześniej daty powrotu.',
+    quickStartSchengenTitle: 'Wjazd do strefy Schengen',
+    quickStartSchengenDesc: 'Śledź pobyt w Schengen w czasie rzeczywistym bez ustalonej daty wyjazdu.',
+    startTrackingBtn: 'Rozpocznij śledzenie podróży',
+
     tabTrips: 'Wyjazdy',
     tabPlanner: 'Planer',
     tabCalendar: 'Kalendarz',
@@ -1140,6 +1275,33 @@ export const translations: Record<Language, TranslationDictionary> = {
     singleTripViolationAlert: 'Внимание: один из выездов длился более 6 месяцев непрерывно.',
     switchToResidentBtn: 'Переключить на Резидент ЕС',
     switchToSchengenBtn: 'Переключить на Шенген 90/180',
+
+    // Live Trip Tracker
+    liveStayTitle: 'Трекер текущей поездки',
+    currentlyAbroadLive: (countryName?: string) => `Сейчас за границей: ${countryName || 'За пределами страны'}`,
+    currentlyInSchengenLive: (countryName?: string) => `Сейчас в Шенгене: ${countryName || 'Шенгенская зона'}`,
+    dayCountSince: (day: number, date: string) => `${day}-й день (с ${date})`,
+    safeDaysRemainingAbroad: (days: number) => `Безопасный остаток выезда: ${days} дн.`,
+    returnedTodayBtn: '🛬 Я вернулся сегодня',
+    departedSchengenTodayBtn: '🛫 Я выехал сегодня',
+    pickReturnDateBtn: 'Указать другую дату возвращения...',
+    pickDepartureDateBtn: 'Указать другую дату выезда...',
+    iAmLeavingNowBtn: '🛫 Я сейчас за границей / выехать',
+    iEnteredSchengenNowBtn: '🛬 Я въехал в Шенген / нахожусь здесь',
+    ongoingTripBadge: 'Текущая',
+    ongoingCheckboxTitle: 'Текущая поездка (дата возвращения неизвестна)',
+    ongoingCheckboxSubtitle: 'Считает дни в реальном времени по сегодняшний день, пока вы не отметите возвращение',
+    ongoingDynamicDurationHint: 'Открытая дата — считается динамически по сегодняшний день',
+    destinationCountryLabel: 'Страна пребывания',
+    selectCountryPrompt: 'Выберите страну или введите название',
+    returnDateModalTitle: 'Подтвердить дату возвращения',
+    confirmReturnBtn: 'Подтвердить возвращение',
+    presentDate: 'По сей день',
+    quickStartAbroadTitle: 'Выезд за границу',
+    quickStartAbroadDesc: 'Считайте дни отсутствия в реальном времени, даже если дата возвращения ещё не определена.',
+    quickStartSchengenTitle: 'Въезд в Шенгенскую зону',
+    quickStartSchengenDesc: 'Отслеживайте дни пребывания в Шенгене в реальном времени без фиксированной даты выезда.',
+    startTrackingBtn: 'Начать отслеживание поездки',
 
     tabTrips: 'Поездки',
     tabPlanner: 'Планировщик',

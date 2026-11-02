@@ -381,6 +381,48 @@ export function App() {
     setIsTripModalOpen(true)
   }
 
+  const handleStartOngoingTrip = (entryDate: string, title: string, notes: string) => {
+    triggerHaptic('success')
+    const todayStr = toDateString(new Date())
+    const effectiveExit = entryDate > todayStr ? entryDate : todayStr
+
+    const newTrip: Trip = {
+      id: `trip_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      entryDate,
+      exitDate: effectiveExit,
+      title: title || undefined,
+      notes: notes || undefined,
+      isPlanned: false,
+      ongoing: true,
+    }
+
+    // End any previously active ongoing trip, and append new active one
+    updateCurrentProfileTrips((trips) => [
+      ...trips.map((t) => (t.ongoing ? { ...t, ongoing: false, exitDate: effectiveExit } : t)),
+      newTrip,
+    ])
+  }
+
+  const handleEndOngoingTrip = (tripId: string, returnDate?: string) => {
+    triggerHaptic('success')
+    const finalReturnDate = returnDate || toDateString(new Date())
+
+    updateCurrentProfileTrips((trips) =>
+      trips.map((t) => {
+        if (t.id === tripId) {
+          const effectiveReturn =
+            returnDate && returnDate >= t.entryDate ? returnDate : finalReturnDate
+          return {
+            ...t,
+            ongoing: false,
+            exitDate: effectiveReturn,
+          }
+        }
+        return t
+      })
+    )
+  }
+
   const handleAddPlannedTrip = (entryDate: string, exitDate: string, title: string) => {
     triggerHaptic('medium')
     const newTrip: Trip = {
@@ -474,6 +516,9 @@ export function App() {
                 })
               }
               onUpdateCountry={(code) => handleUpdateProfile(activeProfile.id, { country: code })}
+              onStartOngoingTrip={handleStartOngoingTrip}
+              onEndOngoingTrip={handleEndOngoingTrip}
+              onEditTrip={handleEditTrip}
             />
 
             <TripList
@@ -486,6 +531,7 @@ export function App() {
               onEditTrip={handleEditTrip}
               onDeleteTrip={handleDeleteTrip}
               onLoadSampleData={handleLoadSampleData}
+              onEndOngoingTrip={handleEndOngoingTrip}
             />
           </div>
 
@@ -570,6 +616,9 @@ export function App() {
               })
             }
             onUpdateCountry={(code) => handleUpdateProfile(activeProfile.id, { country: code })}
+            onStartOngoingTrip={handleStartOngoingTrip}
+            onEndOngoingTrip={handleEndOngoingTrip}
+            onEditTrip={handleEditTrip}
           />
 
           {/* Tablet & Mobile Tab Switcher */}
@@ -633,6 +682,7 @@ export function App() {
                 onEditTrip={handleEditTrip}
                 onDeleteTrip={handleDeleteTrip}
                 onLoadSampleData={handleLoadSampleData}
+                onEndOngoingTrip={handleEndOngoingTrip}
               />
             )}
 

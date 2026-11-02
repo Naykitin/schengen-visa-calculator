@@ -269,19 +269,30 @@ export function parseBackupJson(jsonContent: string, currentData: AppStorageData
 
 export function sanitizeTripsList(rawList: any[]): Trip[] {
   const validTrips: Trip[] = []
+  const todayStr = new Date().toISOString().slice(0, 10)
+
   for (const item of rawList) {
+    if (!isValidDateString(item.entryDate)) continue
+
+    const isOngoing = Boolean(item.ongoing)
+    let exitDate = item.exitDate
+
+    if (isOngoing && (!isValidDateString(exitDate) || exitDate < item.entryDate)) {
+      exitDate = item.entryDate > todayStr ? item.entryDate : todayStr
+    }
+
     if (
-      isValidDateString(item.entryDate) &&
-      isValidDateString(item.exitDate) &&
-      item.entryDate <= item.exitDate
+      isValidDateString(exitDate) &&
+      item.entryDate <= exitDate
     ) {
       validTrips.push({
         id: sanitizeString(item.id || `trip_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`, 60),
         entryDate: item.entryDate,
-        exitDate: item.exitDate,
+        exitDate: exitDate,
         title: item.title ? sanitizeString(item.title, 80) : undefined,
         notes: item.notes ? sanitizeString(item.notes, 200) : undefined,
         isPlanned: Boolean(item.isPlanned),
+        ongoing: isOngoing,
       })
     }
   }

@@ -33,9 +33,12 @@ export const TripModal: React.FC<TripModalProps> = ({
   const [title, setTitle] = useState('')
   const [notes, setNotes] = useState('')
   const [isPlanned, setIsPlanned] = useState(false)
+  const [isOngoing, setIsOngoing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [isSavedSuccess, setIsSavedSuccess] = useState(false)
+
+  const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), [])
 
   useEffect(() => {
     if (initialTrip) {
@@ -44,6 +47,7 @@ export const TripModal: React.FC<TripModalProps> = ({
       setTitle(initialTrip.title || '')
       setNotes(initialTrip.notes || '')
       setIsPlanned(Boolean(initialTrip.isPlanned))
+      setIsOngoing(Boolean(initialTrip.ongoing))
     } else {
       const today = new Date().toISOString().slice(0, 10)
       setEntryDate(today)
@@ -51,6 +55,7 @@ export const TripModal: React.FC<TripModalProps> = ({
       setTitle('')
       setNotes('')
       setIsPlanned(false)
+      setIsOngoing(false)
     }
     setError(null)
     setIsSaving(false)
@@ -69,28 +74,29 @@ export const TripModal: React.FC<TripModalProps> = ({
   }, [isOpen, onClose])
 
   // Live simulation & calculation memoization (zero UI freeze)
-  const isDateOrderValid = entryDate && exitDate && entryDate <= exitDate
+  const effectiveExit = isOngoing ? (entryDate > todayStr ? entryDate : todayStr) : exitDate
+  const isDateOrderValid = Boolean(entryDate && (isOngoing || (exitDate && entryDate <= exitDate)))
   const duration = useMemo(() => {
-    return isDateOrderValid ? getTripDuration(entryDate, exitDate) : 0
-  }, [isDateOrderValid, entryDate, exitDate])
+    return isDateOrderValid ? getTripDuration(entryDate, effectiveExit, isOngoing) : 0
+  }, [isDateOrderValid, entryDate, effectiveExit, isOngoing])
 
   const simulation = useMemo(() => {
     return !isResidentMode && isDateOrderValid
-      ? simulateTrip(existingTrips, entryDate, exitDate, initialTrip?.id)
+      ? simulateTrip(existingTrips, entryDate, effectiveExit, initialTrip?.id)
       : null
-  }, [isResidentMode, isDateOrderValid, existingTrips, entryDate, exitDate, initialTrip?.id])
+  }, [isResidentMode, isDateOrderValid, existingTrips, entryDate, effectiveExit, initialTrip?.id])
 
   if (!isOpen) return null
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!entryDate || !exitDate) {
+    if (!entryDate || (!isOngoing && !exitDate)) {
       setError(t.errSelectDates)
       return
     }
 
-    if (exitDate < entryDate) {
+    if (!isOngoing && exitDate < entryDate) {
       setError(t.errExitBeforeEntry)
       return
     }
@@ -101,10 +107,11 @@ export const TripModal: React.FC<TripModalProps> = ({
     const trip: Trip = {
       id: initialTrip?.id || `trip_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       entryDate,
-      exitDate,
+      exitDate: effectiveExit,
       title: title.trim() || undefined,
       notes: notes.trim() || undefined,
-      isPlanned,
+      isPlanned: isOngoing ? false : isPlanned,
+      ongoing: isOngoing,
     }
 
     // Micro-delay gives the user immediate visual confirmation of the save action
@@ -210,14 +217,28 @@ export const TripModal: React.FC<TripModalProps> = ({
                     ? 'Data powrotu'
                     : 'Return Date'
                   : t.exitDateLabel}
+                {isOngoing && (
+                  <span className="text-[10px] text-emerald-400 ml-1.5 font-normal">
+                    ({t.ongoingTripBadge})
+                  </span>
+                )}
               </label>
-              <input
-                type="date"
-                required
-                value={exitDate}
-                onChange={(e) => setExitDate(e.target.value)}
-                className="w-full min-w-0 max-w-full block h-11 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
-              />
+              {isOngoing ? (
+                <div className="w-full min-w-0 max-w-full flex items-center justify-between h-11 bg-emerald-950/20 border border-emerald-500/30 rounded-xl px-3 text-xs text-emerald-300">
+                  <span>{t.presentDate} ({todayStr})</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    Live
+                  </span>
+                </div>
+              ) : (
+                <input
+                  type="date"
+                  required
+                  value={exitDate}
+                  onChange={(e) => setExitDate(e.target.value)}
+                  className="w-full min-w-0 max-w-full block h-11 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
+                />
+              )}
             </div>
           </div>
 
@@ -318,27 +339,51 @@ export const TripModal: React.FC<TripModalProps> = ({
             />
           </div>
 
-          {/* Planned trip checkbox */}
-          <label className="flex items-start gap-3 p-3 bg-slate-950/60 border border-slate-800 rounded-xl cursor-pointer hover:bg-slate-800/40 transition-colors">
+          {/* Ongoing live trip checkbox */}
+          <label className="flex items-start gap-3 p-3 bg-slate-950/60 border border-slate-800 hover:border-emerald-500/40 rounded-xl cursor-pointer hover:bg-slate-800/40 transition-colors">
             <input
               type="checkbox"
-              checked={isPlanned}
-              onChange={(e) => setIsPlanned(e.target.checked)}
-              className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-700 bg-slate-900 mt-0.5"
+              checked={isOngoing}
+              onChange={(e) => {
+                setIsOngoing(e.target.checked)
+                if (e.target.checked) setIsPlanned(false)
+              }}
+              className="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-400 border-slate-700 bg-slate-900 mt-0.5"
             />
             <div className="text-xs">
-              <span className="font-semibold text-slate-200 block">
-                {t.plannedCheckboxTitle}
+              <span className="font-semibold text-slate-200 flex items-center gap-1.5">
+                <span className={`inline-block w-2 h-2 rounded-full ${isOngoing ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`} />
+                {t.ongoingCheckboxTitle}
               </span>
               <span className="text-slate-400 text-[11px] block mt-0.5">
-                {isResidentMode
-                  ? lang === 'ru'
-                    ? 'Позволяет смоделировать влияние выезда на 183 дня налогового резидентства'
-                    : 'Forecasts impact on 183-day tax residency without affecting historical records'
-                  : t.plannedCheckboxSubtitle}
+                {t.ongoingCheckboxSubtitle}
               </span>
             </div>
           </label>
+
+          {/* Planned trip checkbox (only when not ongoing) */}
+          {!isOngoing && (
+            <label className="flex items-start gap-3 p-3 bg-slate-950/60 border border-slate-800 rounded-xl cursor-pointer hover:bg-slate-800/40 transition-colors">
+              <input
+                type="checkbox"
+                checked={isPlanned}
+                onChange={(e) => setIsPlanned(e.target.checked)}
+                className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-700 bg-slate-900 mt-0.5"
+              />
+              <div className="text-xs">
+                <span className="font-semibold text-slate-200 block">
+                  {t.plannedCheckboxTitle}
+                </span>
+                <span className="text-slate-400 text-[11px] block mt-0.5">
+                  {isResidentMode
+                    ? lang === 'ru'
+                      ? 'Позволяет смоделировать влияние выезда на 183 дня налогового резидентства'
+                      : 'Forecasts impact on 183-day tax residency without affecting historical records'
+                    : t.plannedCheckboxSubtitle}
+                </span>
+              </div>
+            </label>
+          )}
 
           {/* Action buttons */}
           <div className="flex items-center gap-3 pt-2">
