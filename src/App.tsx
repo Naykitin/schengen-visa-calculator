@@ -65,10 +65,18 @@ export function App() {
   const [appData, setAppData] = useState<AppStorageData>(INITIAL_STORAGE)
   const [isLoaded, setIsLoaded] = useState(false)
   
-  // Internationalization: default to English with browser language detection
+  // Internationalization: persistent language choice with browser fallback
   const [lang, setLang] = useState<Language>(() => {
-    if (typeof window !== 'undefined' && navigator.language?.toLowerCase().startsWith('ru')) {
-      return 'ru'
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('schengen_language') as Language
+      if (saved && ['en', 'ru', 'de', 'fr', 'pl'].includes(saved)) {
+        return saved
+      }
+      const nav = navigator.language?.toLowerCase() || ''
+      if (nav.startsWith('ru')) return 'ru'
+      if (nav.startsWith('de')) return 'de'
+      if (nav.startsWith('fr')) return 'fr'
+      if (nav.startsWith('pl')) return 'pl'
     }
     return 'en'
   })
@@ -266,10 +274,19 @@ export function App() {
     }
   }, [summary.hasOverstay, isResidentMode])
 
-  // Language Toggle
-  const handleToggleLanguage = () => {
-    setLang((prev) => (prev === 'en' ? 'ru' : 'en'))
+  // Language Selection
+  const handleSelectLanguage = (newLang: Language) => {
+    setLang(newLang)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('schengen_language', newLang)
+    }
     triggerHaptic('light')
+  }
+
+  const handleToggleLanguage = () => {
+    const list: Language[] = ['en', 'de', 'fr', 'pl', 'ru']
+    const nextIdx = (list.indexOf(lang) + 1) % list.length
+    handleSelectLanguage(list[nextIdx])
   }
 
   // Profile operations
@@ -427,6 +444,7 @@ export function App() {
         onOpenProfileModal={() => setIsProfileModalOpen(true)}
         onOpenSyncModal={() => setIsSyncModalOpen(true)}
         onToggleLanguage={handleToggleLanguage}
+        onSelectLanguage={handleSelectLanguage}
         onOpenAddModal={handleAddTrip}
         onOpenBackupModal={() => setIsBackupModalOpen(true)}
         onOpenInfoModal={() => setIsInfoModalOpen(true)}

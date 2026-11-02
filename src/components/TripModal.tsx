@@ -124,6 +124,12 @@ export const TripModal: React.FC<TripModalProps> = ({
                 {isResidentMode
                   ? lang === 'ru'
                     ? `Выезд за пределы страны проживания (${countryName})`
+                    : lang === 'de'
+                    ? `Auslandsaufenthalt außerhalb von ${countryName}`
+                    : lang === 'fr'
+                    ? `Absence hors de ${countryName}`
+                    : lang === 'pl'
+                    ? `Wyjazd poza ${countryName}`
                     : `Absence outside home country (${countryName})`
                   : 'Schengen Area stay duration'}
               </p>
@@ -147,12 +153,18 @@ export const TripModal: React.FC<TripModalProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Dates row */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div className="min-w-0">
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center min-h-[20px]">
                 {isResidentMode
                   ? lang === 'ru'
                     ? 'Дата выезда'
+                    : lang === 'de'
+                    ? 'Abreisedatum'
+                    : lang === 'fr'
+                    ? 'Date de départ'
+                    : lang === 'pl'
+                    ? 'Data wyjazdu'
                     : 'Departure Date'
                   : t.entryDateLabel}
               </label>
@@ -161,15 +173,21 @@ export const TripModal: React.FC<TripModalProps> = ({
                 required
                 value={entryDate}
                 onChange={(e) => setEntryDate(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-base sm:text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full min-w-0 max-w-full block h-11 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+            <div className="min-w-0">
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center min-h-[20px]">
                 {isResidentMode
                   ? lang === 'ru'
                     ? 'Дата возврата'
+                    : lang === 'de'
+                    ? 'Rückreisedatum'
+                    : lang === 'fr'
+                    ? 'Date de retour'
+                    : lang === 'pl'
+                    ? 'Data powrotu'
                     : 'Return Date'
                   : t.exitDateLabel}
               </label>
@@ -178,7 +196,7 @@ export const TripModal: React.FC<TripModalProps> = ({
                 required
                 value={exitDate}
                 onChange={(e) => setExitDate(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-base sm:text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full min-w-0 max-w-full block h-11 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
           </div>

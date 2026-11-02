@@ -9,9 +9,9 @@ import {
 } from 'lucide-react'
 import type { Trip } from '../lib/schengen'
 import type { Language, TranslationDictionary } from '../lib/i18n'
+import { getDateLocale } from '../lib/i18n'
 import { getTripDuration } from '../lib/schengen'
 import { format, parseISO } from 'date-fns'
-import { ru, enUS } from 'date-fns/locale'
 
 interface TripListProps {
   trips: Trip[]
@@ -36,7 +36,7 @@ export const TripList: React.FC<TripListProps> = ({
   onDeleteTrip,
   onLoadSampleData,
 }) => {
-  const dateLocale = lang === 'ru' ? ru : enUS
+  const dateLocale = getDateLocale(lang)
   // Sort trips descending by entryDate
   const sortedTrips = [...trips].sort((a, b) => b.entryDate.localeCompare(a.entryDate))
 
