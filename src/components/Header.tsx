@@ -1,6 +1,7 @@
 import React from 'react'
 import { Cloud, Download, Globe, HelpCircle, Plus, RefreshCw, User, WifiOff } from 'lucide-react'
 import type { Language, TranslationDictionary } from '../lib/i18n'
+import { SUPPORTED_LANGUAGES } from '../lib/i18n'
 import type { Profile } from '../lib/storage'
 import { PROFILE_COLORS, EU_COUNTRIES } from '../lib/storage'
 
@@ -14,7 +15,8 @@ interface HeaderProps {
   onReloadApp: () => void
   onOpenProfileModal: () => void
   onOpenSyncModal: () => void
-  onToggleLanguage: () => void
+  onToggleLanguage?: () => void
+  onSelectLanguage: (lang: Language) => void
   onOpenAddModal: () => void
   onOpenBackupModal: () => void
   onOpenInfoModal: () => void
@@ -30,7 +32,7 @@ export const Header: React.FC<HeaderProps> = ({
   onReloadApp,
   onOpenProfileModal,
   onOpenSyncModal,
-  onToggleLanguage,
+  onSelectLanguage,
   onOpenAddModal,
   onOpenBackupModal,
   onOpenInfoModal,
@@ -109,15 +111,22 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="hidden md:inline">{isSyncActive ? 'Sync ON' : 'Sync'}</span>
           </button>
 
-          {/* Language Toggle */}
-          <button
-            onClick={onToggleLanguage}
-            className="flex items-center gap-1.5 py-1 px-2 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-900 transition-all min-h-[36px]"
-            title="Toggle Language (RU / EN)"
-          >
-            <Globe className="w-3.5 h-3.5 text-slate-400" />
-            <span>{lang.toUpperCase()}</span>
-          </button>
+          {/* Language Selector */}
+          <div className="relative flex items-center">
+            <select
+              value={lang}
+              onChange={(e) => onSelectLanguage(e.target.value as Language)}
+              className="bg-slate-900 border border-slate-700/80 hover:border-slate-500 text-slate-200 text-xs font-bold rounded-xl pl-2.5 pr-7 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer transition-all min-h-[36px] appearance-none"
+              title="Select Language"
+            >
+              {SUPPORTED_LANGUAGES.map((l) => (
+                <option key={l.code} value={l.code} className="bg-slate-900 text-slate-200">
+                  {l.flag} {l.code.toUpperCase()}
+                </option>
+              ))}
+            </select>
+            <Globe className="w-3.5 h-3.5 text-slate-400 absolute right-2 pointer-events-none" />
+          </div>
 
           {/* Backup & Data Modal */}
           <button

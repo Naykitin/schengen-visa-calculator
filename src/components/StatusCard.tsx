@@ -14,11 +14,11 @@ import {
 } from 'lucide-react'
 import type { SchengenSummary } from '../lib/schengen'
 import type { Language, TranslationDictionary } from '../lib/i18n'
+import { getDateLocale } from '../lib/i18n'
 import type { Profile } from '../lib/storage'
 import { EU_COUNTRIES } from '../lib/storage'
 import { calculateResidenceYearSummary, calculatePermanentResidenceSummary } from '../lib/residence'
 import { format, parseISO } from 'date-fns'
-import { ru, enUS } from 'date-fns/locale'
 
 interface StatusCardProps {
   summary: SchengenSummary
@@ -45,7 +45,7 @@ export const StatusCard: React.FC<StatusCardProps> = ({
 }) => {
   const [isOverstayDismissed, setIsOverstayDismissed] = useState(false)
   const isToday = referenceDate === new Date().toISOString().slice(0, 10)
-  const dateLocale = lang === 'ru' ? ru : enUS
+  const dateLocale = getDateLocale(lang)
   const formattedRefDate = format(parseISO(referenceDate), 'd MMMM yyyy', { locale: dateLocale })
 
   // Year state for EU Resident mode (defaults to year of referenceDate)

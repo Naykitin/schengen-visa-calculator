@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import type { Trip } from '../lib/schengen'
 import type { Language, TranslationDictionary } from '../lib/i18n'
+import { getDateLocale } from '../lib/i18n'
 import {
   findEarliestEntryDate,
   getTripDuration,
@@ -15,7 +16,6 @@ import {
   toDateString,
 } from '../lib/schengen'
 import { format, parseISO } from 'date-fns'
-import { ru, enUS } from 'date-fns/locale'
 
 interface PlannerViewProps {
   trips: Trip[]
@@ -31,7 +31,7 @@ export const PlannerView: React.FC<PlannerViewProps> = ({
   onAddPlannedTrip,
 }) => {
   const [mode, setMode] = useState<'find-earliest' | 'check-dates'>('find-earliest')
-  const dateLocale = lang === 'ru' ? ru : enUS
+  const dateLocale = getDateLocale(lang)
 
   // Find earliest state
   const [desiredDays, setDesiredDays] = useState<number>(14)
@@ -104,29 +104,32 @@ export const PlannerView: React.FC<PlannerViewProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 items-start">
+            <div className="min-w-0">
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center min-h-[32px] sm:min-h-[36px]">
                 {t.desiredDaysLabel}
               </label>
-              <div className="flex items-center gap-2">
+              <div className="relative flex items-center">
                 <input
                   type="number"
                   min={1}
                   max={90}
                   value={desiredDays}
                   onChange={(e) => setDesiredDays(Math.max(1, Math.min(90, parseInt(e.target.value) || 1)))}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm font-semibold text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full min-w-0 h-11 bg-slate-950 border border-slate-800 rounded-xl pl-3.5 pr-14 text-sm font-semibold text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
                 />
-                <span className="text-xs text-slate-400 shrink-0 font-medium">{t.days}</span>
+                <span className="absolute right-3.5 text-xs text-slate-400 pointer-events-none font-medium">
+                  {t.days}
+                </span>
               </div>
               {/* Quick pills */}
-              <div className="flex gap-1.5 mt-2">
+              <div className="flex flex-wrap gap-1.5 mt-2.5">
                 {[7, 14, 30, 45, 90].map((d) => (
                   <button
                     key={d}
+                    type="button"
                     onClick={() => setDesiredDays(d)}
-                    className={`px-2 py-0.5 rounded-lg text-[10px] font-semibold border ${
+                    className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition-all active:scale-95 ${
                       desiredDays === d
                         ? 'bg-blue-500/20 text-blue-300 border-blue-500/40'
                         : 'bg-slate-800/80 text-slate-400 border-slate-700/60 hover:text-slate-200'
@@ -138,15 +141,15 @@ export const PlannerView: React.FC<PlannerViewProps> = ({
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+            <div className="min-w-0">
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center min-h-[32px] sm:min-h-[36px]">
                 {t.searchFromDateLabel}
               </label>
               <input
                 type="date"
                 value={searchFromDate}
                 onChange={(e) => setSearchFromDate(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full min-w-0 h-11 bg-slate-950 border border-slate-800 rounded-xl px-3 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
           </div>
@@ -216,28 +219,28 @@ export const PlannerView: React.FC<PlannerViewProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 items-start">
+            <div className="min-w-0">
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center min-h-[24px]">
                 {t.entryDateLabel}
               </label>
               <input
                 type="date"
                 value={checkEntry}
                 onChange={(e) => setCheckEntry(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full min-w-0 h-11 bg-slate-950 border border-slate-800 rounded-xl px-3 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+            <div className="min-w-0">
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center min-h-[24px]">
                 {t.exitDateLabel}
               </label>
               <input
                 type="date"
                 value={checkExit}
                 onChange={(e) => setCheckExit(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full min-w-0 h-11 bg-slate-950 border border-slate-800 rounded-xl px-3 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
           </div>

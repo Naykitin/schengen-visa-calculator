@@ -16,9 +16,9 @@ import {
   startOfWeek,
   subMonths,
 } from 'date-fns'
-import { ru, enUS } from 'date-fns/locale'
 import type { Trip } from '../lib/schengen'
 import type { Language, TranslationDictionary } from '../lib/i18n'
+import { getDateLocale } from '../lib/i18n'
 import { triggerHaptic } from '../lib/haptics'
 import {
   buildSchengenDaysMap,
@@ -47,7 +47,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
   const touchStartX = useRef<number | null>(null)
 
-  const dateLocale = lang === 'ru' ? ru : enUS
+  const dateLocale = getDateLocale(lang)
   const daysMap = buildSchengenDaysMap(trips)
 
   const monthStart = startOfMonth(currentMonth)

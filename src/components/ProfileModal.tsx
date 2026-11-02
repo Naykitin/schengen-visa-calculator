@@ -235,11 +235,11 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               <label className="block text-[11px] font-medium text-slate-400 mb-1.5">
                 {t.profileModeLabel}
               </label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <button
                   type="button"
                   onClick={() => setSelectedMode('schengen')}
-                  className={`p-2.5 rounded-xl border text-left transition-all ${
+                  className={`p-3 rounded-xl border text-left transition-all ${
                     selectedMode === 'schengen'
                       ? 'bg-blue-600/20 border-blue-500 text-white shadow-sm'
                       : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
@@ -256,7 +256,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setSelectedMode('eu_resident')}
-                  className={`p-2.5 rounded-xl border text-left transition-all ${
+                  className={`p-3 rounded-xl border text-left transition-all ${
                     selectedMode === 'eu_resident'
                       ? 'bg-emerald-600/20 border-emerald-500 text-white shadow-sm'
                       : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
