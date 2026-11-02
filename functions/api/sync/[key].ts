@@ -72,6 +72,8 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
       .first<Pick<VaultRecord, 'payload' | 'updated_at'>>()
 
     if (!row) {
+      // Security delay to deter rapid automated brute-force attacks
+      await new Promise((resolve) => setTimeout(resolve, 500))
       return new Response(JSON.stringify({ error: 'Vault not found' }), {
         status: 404,
         headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },

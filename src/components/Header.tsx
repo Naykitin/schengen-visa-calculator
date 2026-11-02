@@ -15,7 +15,6 @@ interface HeaderProps {
   onReloadApp: () => void
   onOpenProfileModal: () => void
   onOpenSyncModal: () => void
-  onToggleLanguage?: () => void
   onSelectLanguage: (lang: Language) => void
   onOpenAddModal: () => void
   onOpenBackupModal: () => void

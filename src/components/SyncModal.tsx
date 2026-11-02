@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
+  AlertCircle,
   Check,
   Cloud,
   Copy,
@@ -8,6 +9,7 @@ import {
   Link,
   Power,
   RefreshCw,
+  ShieldAlert,
   X,
 } from 'lucide-react'
 import type { TranslationDictionary } from '../lib/i18n'
@@ -49,6 +51,40 @@ export const SyncModal: React.FC<SyncModalProps> = ({
   const [copiedKey, setCopiedKey] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
   const [showInstructions, setShowInstructions] = useState(false)
+  const [validationError, setValidationError] = useState<string | null>(null)
+  const [cooldown, setCooldown] = useState(0)
+  const failedAttemptsRef = useRef<number>(0)
+  const lastSubmitTimeRef = useRef<number>(0)
+
+  // Trigger anti-bruteforce cooldown on consecutive failed attempts
+  useEffect(() => {
+    if (syncError) {
+      failedAttemptsRef.current += 1
+      const count = failedAttemptsRef.current
+      if (count >= 3) {
+        // 5s on 3 fails, 10s on 4 fails, 30s on 5+ fails
+        const waitTime = count === 3 ? 5 : count === 4 ? 10 : 30
+        setCooldown(waitTime)
+      }
+    }
+  }, [syncError])
+
+  // Reset failure count on successful sync key connection
+  useEffect(() => {
+    if (syncKey) {
+      failedAttemptsRef.current = 0
+      setCooldown(0)
+    }
+  }, [syncKey])
+
+  // Cooldown countdown timer
+  useEffect(() => {
+    if (cooldown <= 0) return
+    const interval = setInterval(() => {
+      setCooldown((c) => Math.max(0, c - 1))
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [cooldown])
 
   // Close on Escape key
   useEffect(() => {
@@ -80,11 +116,46 @@ export const SyncModal: React.FC<SyncModalProps> = ({
     setTimeout(() => setCopiedLink(false), 2000)
   }
 
+  // Handle key input with auto-URL extraction and sanitization
+  const handleKeyInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value.trim()
+
+    // If user pasted a full pairing link (e.g. https://...?sync=vg_xxx), extract sync token
+    if (val.includes('sync=')) {
+      try {
+        const url = new URL(val)
+        val = url.searchParams.get('sync') || val
+      } catch {
+        const match = val.match(/[?&]sync=([a-zA-Z0-9_-]+)/)
+        if (match) val = match[1]
+      }
+    }
+
+    // Sanitize to only valid key chars (max 64 chars)
+    const cleaned = val.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64)
+    setInputKey(cleaned)
+    setValidationError(null)
+  }
+
   const handleConnect = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!inputKey.trim()) return
-    onConnectSyncKey(inputKey.trim())
-    setInputKey('')
+    if (cooldown > 0 || isSyncing) return
+
+    // Debounce rapid submits (1500ms minimum interval)
+    const now = Date.now()
+    if (now - lastSubmitTimeRef.current < 1500) {
+      return
+    }
+    lastSubmitTimeRef.current = now
+
+    const key = inputKey.trim()
+    if (key.length < 10) {
+      setValidationError('Sync key must be at least 10 characters (e.g. vg_...)')
+      triggerHaptic('error')
+      return
+    }
+
+    onConnectSyncKey(key)
   }
 
   return (
@@ -258,25 +329,54 @@ export const SyncModal: React.FC<SyncModalProps> = ({
 
             {/* Option B: Connect Existing Sync Key */}
             <form onSubmit={handleConnect} className="space-y-2">
-              <label className="block text-xs font-semibold text-slate-300">
-                {t.connectExistingDeviceBtn}
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-semibold text-slate-300">
+                  {t.connectExistingDeviceBtn}
+                </label>
+                {cooldown > 0 && (
+                  <span className="text-[11px] font-semibold text-amber-400 flex items-center gap-1 animate-pulse">
+                    <ShieldAlert className="w-3.5 h-3.5" />
+                    Cooldown: {cooldown}s
+                  </span>
+                )}
+              </div>
+
+              {validationError && (
+                <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] flex items-center gap-1.5 animate-fade-in">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  <span>{validationError}</span>
+                </div>
+              )}
+
               <div className="flex gap-2">
                 <input
                   type="text"
+                  disabled={cooldown > 0 || isSyncing}
                   placeholder={t.enterSyncKeyPlaceholder}
                   value={inputKey}
-                  onChange={(e) => setInputKey(e.target.value)}
-                  className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-base sm:text-xs text-slate-100 placeholder:text-slate-600 font-mono focus:outline-none focus:border-blue-500 min-h-[44px]"
+                  onChange={handleKeyInputChange}
+                  className="flex-1 bg-slate-950 border border-slate-800 disabled:opacity-50 rounded-xl px-3 py-2 text-base sm:text-xs text-slate-100 placeholder:text-slate-600 font-mono focus:outline-none focus:border-blue-500 min-h-[44px]"
                 />
                 <button
                   type="submit"
-                  disabled={!inputKey.trim()}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 text-white font-semibold text-xs rounded-xl border border-slate-700 transition-all min-h-[44px]"
+                  disabled={!inputKey.trim() || inputKey.length < 10 || isSyncing || cooldown > 0}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-xs rounded-xl border border-blue-500/30 disabled:border-slate-700 transition-all min-h-[44px] flex items-center justify-center gap-1.5 shrink-0"
                 >
-                  {t.connectBtn}
+                  {isSyncing ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>...</span>
+                    </>
+                  ) : cooldown > 0 ? (
+                    <span>Wait {cooldown}s</span>
+                  ) : (
+                    <span>{t.connectBtn}</span>
+                  )}
                 </button>
               </div>
+              <p className="text-[10px] text-slate-500">
+                You can paste either your sync key (e.g. <span className="font-mono text-slate-400">vg_...</span>) or the full 1-click pairing link.
+              </p>
             </form>
           </div>
         )}
