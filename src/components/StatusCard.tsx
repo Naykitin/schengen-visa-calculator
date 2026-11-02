@@ -246,7 +246,7 @@ export const StatusCard: React.FC<StatusCardProps> = ({
                 </div>
               </div>
               <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-xl border border-emerald-500/20 group-hover:bg-emerald-500 group-hover:text-white transition-all shrink-0 ml-2">
-                + {lang === 'ru' ? 'Выехать' : 'Start'}
+                + {lang === 'uk' ? 'Виїхати' : 'Start'}
               </span>
             </button>
           </div>
@@ -520,7 +520,7 @@ export const StatusCard: React.FC<StatusCardProps> = ({
               </div>
             </div>
             <span className="text-xs font-semibold text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-xl border border-blue-500/20 group-hover:bg-blue-500 group-hover:text-white transition-all shrink-0 ml-2">
-              + {lang === 'ru' ? 'Въехать' : 'Start'}
+              + {lang === 'uk' ? 'Вʼїхати' : 'Start'}
             </span>
           </button>
         </div>

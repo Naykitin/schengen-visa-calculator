@@ -137,7 +137,7 @@ export const TripList: React.FC<TripListProps> = ({
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <h4 className="text-sm font-bold text-slate-100">
-                        {trip.title || (isResidentMode ? `Trip outside ${countryName}` : lang === 'ru' ? 'Поездка в Шенген' : 'Schengen Trip')}
+                        {trip.title || (isResidentMode ? `Trip outside ${countryName}` : lang === 'uk' ? 'Поїздка в Шенген' : 'Schengen Trip')}
                       </h4>
                       {trip.ongoing ? (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 shadow-sm">

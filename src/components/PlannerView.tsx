@@ -212,8 +212,8 @@ export const PlannerView: React.FC<PlannerViewProps> = ({
                   onAddPlannedTrip(
                     earliestResult.entryDate!,
                     earliestResult.exitDate!,
-                    lang === 'ru'
-                      ? `Запланированная поездка (${desiredDays} дн.)`
+                    lang === 'uk'
+                      ? `Запланована поїздка (${desiredDays} дн.)`
                       : `Planned trip (${desiredDays} days)`
                   )
                 }
@@ -323,8 +323,8 @@ export const PlannerView: React.FC<PlannerViewProps> = ({
                     onAddPlannedTrip(
                       checkEntry,
                       checkExit,
-                      lang === 'ru'
-                        ? `Проверенная поездка (${checkDuration} дн.)`
+                      lang === 'uk'
+                        ? `Перевірена поїздка (${checkDuration} дн.)`
                         : `Verified trip (${checkDuration} days)`
                     )
                   }
