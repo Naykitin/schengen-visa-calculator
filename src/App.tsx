@@ -468,7 +468,7 @@ export function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col pb-24 sm:pb-8 selection:bg-blue-600/30 selection:text-blue-200">
+    <div className="min-h-screen min-h-[100dvh] bg-slate-950 text-slate-100 flex flex-col pb-20 sm:pb-8 selection:bg-blue-600/30 selection:text-blue-200">
       {/* Top Header */}
       <Header
         lang={lang}
@@ -487,7 +487,7 @@ export function App() {
       />
 
       {/* Main Layout Container (Handles Mobile, Tablet, Desktop & Dual-Screen) */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-3.5 sm:px-6 pt-5 sm:pt-8 pb-8 dual-screen-layout">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-3.5 sm:px-6 pt-3.5 sm:pt-8 pb-8 dual-screen-layout">
         
         {/* =========================================================================
             DESKTOP & DUAL-SCREEN LAYOUT (>= 1024px or Foldable Dual-Screen)
@@ -705,7 +705,7 @@ export function App() {
       {/* =========================================================================
           SITE FOOTER & LEGAL DISCLAIMER
          ========================================================================= */}
-      <footer className="mt-auto max-w-6xl w-full mx-auto px-4 py-8 border-t border-slate-900 text-center space-y-2.5">
+      <footer className="mt-auto max-w-6xl w-full mx-auto px-4 py-5 sm:py-8 border-t border-slate-900 text-center space-y-2">
         <p className="text-[11px] text-slate-500 max-w-3xl mx-auto leading-relaxed">
           ⚖️ <span className="text-slate-400 font-medium">{t.disclaimerShort}</span>
         </p>
