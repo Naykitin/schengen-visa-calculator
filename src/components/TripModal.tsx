@@ -136,18 +136,25 @@ export const TripModal: React.FC<TripModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-      <div className="w-full sm:max-w-lg bg-slate-900 border border-slate-800 rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 shadow-2xl max-h-[92vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-800">
-          <div className="flex items-center gap-2.5">
-            <div className={`p-2 rounded-xl ${isResidentMode ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'}`}>
+      {/* Backdrop overlay for outside tap dismissal */}
+      <div className="fixed inset-0" onClick={onClose} aria-hidden="true" />
+
+      {/* Modal Card */}
+      <div className="relative z-10 w-full sm:max-w-lg bg-slate-900 border border-slate-800 rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[85dvh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-slide-up sm:animate-fade-in">
+        {/* Mobile Pull Bar Grabber */}
+        <div className="w-10 h-1.5 bg-slate-700/80 rounded-full mx-auto mt-2.5 mb-1 sm:hidden shrink-0" />
+
+        {/* Sticky Header */}
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-800 shrink-0">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className={`p-2 rounded-xl shrink-0 ${isResidentMode ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'}`}>
               <Plane className="w-5 h-5" />
             </div>
-            <div>
-              <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
+            <div className="min-w-0">
+              <h3 className="text-base sm:text-lg font-bold text-white tracking-tight truncate">
                 {modalHeading}
               </h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-400 truncate">
                 {isResidentMode
                   ? lang === 'uk'
                     ? `Виїзд за межі країни проживання (${countryName})`
@@ -164,25 +171,27 @@ export const TripModal: React.FC<TripModalProps> = ({
           </div>
 
           <button
+            type="button"
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors"
+            className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors shrink-0 ml-2"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {error && (
-          <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center gap-2 text-xs text-rose-300">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
+        {/* Scrollable Form Body */}
+        <form id="trip-modal-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 overscroll-contain">
+          {error && (
+            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center gap-2 text-xs text-rose-300">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Dates row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          {/* Dates row: side-by-side (2 columns) on all screens */}
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3.5">
             <div className="min-w-0">
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center min-h-[20px]">
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center min-h-[20px] truncate">
                 {isResidentMode
                   ? lang === 'uk'
                     ? 'Дата виїзду'
@@ -200,12 +209,12 @@ export const TripModal: React.FC<TripModalProps> = ({
                 required
                 value={entryDate}
                 onChange={(e) => setEntryDate(e.target.value)}
-                className="w-full min-w-0 max-w-full block h-11 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
+                className="w-full min-w-0 max-w-full block h-11 bg-slate-950 border border-slate-700 rounded-xl px-2.5 sm:px-3 text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
 
             <div className="min-w-0">
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center min-h-[20px]">
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center min-h-[20px] truncate">
                 {isResidentMode
                   ? lang === 'uk'
                     ? 'Дата повернення'
@@ -218,15 +227,15 @@ export const TripModal: React.FC<TripModalProps> = ({
                     : 'Return Date'
                   : t.exitDateLabel}
                 {isOngoing && (
-                  <span className="text-[10px] text-emerald-400 ml-1.5 font-normal">
+                  <span className="text-[10px] text-emerald-400 ml-1.5 font-normal shrink-0">
                     ({t.ongoingTripBadge})
                   </span>
                 )}
               </label>
               {isOngoing ? (
-                <div className="w-full min-w-0 max-w-full flex items-center justify-between h-11 bg-emerald-950/20 border border-emerald-500/30 rounded-xl px-3 text-xs text-emerald-300">
-                  <span>{t.presentDate} ({todayStr})</span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <div className="w-full min-w-0 max-w-full flex items-center justify-between h-11 bg-emerald-950/20 border border-emerald-500/30 rounded-xl px-2.5 sm:px-3 text-xs text-emerald-300">
+                  <span className="truncate">{todayStr}</span>
+                  <span className="px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
                     Live
                   </span>
                 </div>
@@ -236,7 +245,7 @@ export const TripModal: React.FC<TripModalProps> = ({
                   required
                   value={exitDate}
                   onChange={(e) => setExitDate(e.target.value)}
-                  className="w-full min-w-0 max-w-full block h-11 bg-slate-950 border border-slate-700 rounded-xl px-3 text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full min-w-0 max-w-full block h-11 bg-slate-950 border border-slate-700 rounded-xl px-2.5 sm:px-3 text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-blue-500 transition-colors"
                 />
               )}
             </div>
@@ -385,61 +394,63 @@ export const TripModal: React.FC<TripModalProps> = ({
             </label>
           )}
 
-          {/* Action buttons */}
-          <div className="flex items-center gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isSaving || isSavedSuccess}
-              className="flex-1 py-2.5 px-4 rounded-xl border border-slate-700 text-xs font-semibold text-slate-300 hover:bg-slate-800 active:scale-95 transition-all min-h-[44px] disabled:opacity-50"
-            >
-              {t.cancelBtn}
-            </button>
-            <button
-              type="submit"
-              disabled={isSaving || isSavedSuccess}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold text-white shadow-lg transition-all min-h-[44px] ${
-                isSavedSuccess
-                  ? 'bg-emerald-600 shadow-emerald-600/30'
-                  : 'bg-blue-600 hover:bg-blue-500 shadow-blue-600/30 active:scale-95'
-              } disabled:opacity-90`}
-            >
-              {isSaving ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin text-white" />
-                  <span>
-                    {lang === 'uk'
-                      ? 'Збереження...'
-                      : lang === 'de'
-                      ? 'Speichern...'
-                      : lang === 'fr'
-                      ? 'Enregistrement...'
-                      : lang === 'pl'
-                      ? 'Zapisywanie...'
-                      : 'Saving...'}
-                  </span>
-                </>
-              ) : isSavedSuccess ? (
-                <>
-                  <Check className="w-4 h-4 text-white" />
-                  <span>
-                    {lang === 'uk'
-                      ? 'Збережено!'
-                      : lang === 'de'
-                      ? 'Gespeichert!'
-                      : lang === 'fr'
-                      ? 'Enregistré !'
-                      : lang === 'pl'
-                      ? 'Zapisano!'
-                      : 'Saved!'}
-                  </span>
-                </>
-              ) : (
-                <span>{t.saveBtn}</span>
-              )}
-            </button>
-          </div>
         </form>
+
+        {/* Sticky Action Footer with Safe-Bottom Clearance */}
+        <div className="shrink-0 p-4 sm:p-5 border-t border-slate-800/80 bg-slate-900/95 backdrop-blur-md pb-[max(1.25rem,calc(env(safe-area-inset-bottom,0px)+0.75rem))] flex items-center gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isSaving || isSavedSuccess}
+            className="flex-1 py-2.5 px-4 rounded-xl border border-slate-700 text-xs font-semibold text-slate-300 hover:bg-slate-800 active:scale-95 transition-all min-h-[44px] disabled:opacity-50 cursor-pointer"
+          >
+            {t.cancelBtn}
+          </button>
+          <button
+            type="submit"
+            form="trip-modal-form"
+            disabled={isSaving || isSavedSuccess}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold text-white shadow-lg transition-all min-h-[44px] cursor-pointer ${
+              isSavedSuccess
+                ? 'bg-emerald-600 shadow-emerald-600/30'
+                : 'bg-blue-600 hover:bg-blue-500 shadow-blue-600/30 active:scale-95'
+            } disabled:opacity-90`}
+          >
+            {isSaving ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                <span>
+                  {lang === 'uk'
+                    ? 'Збереження...'
+                    : lang === 'de'
+                    ? 'Speichern...'
+                    : lang === 'fr'
+                    ? 'Enregistrement...'
+                    : lang === 'pl'
+                    ? 'Zapisywanie...'
+                    : 'Saving...'}
+                </span>
+              </>
+            ) : isSavedSuccess ? (
+              <>
+                <Check className="w-4 h-4 text-white" />
+                <span>
+                  {lang === 'uk'
+                    ? 'Збережено!'
+                    : lang === 'de'
+                    ? 'Gespeichert!'
+                    : lang === 'fr'
+                    ? 'Enregistré !'
+                    : lang === 'pl'
+                    ? 'Zapisano!'
+                    : 'Saved!'}
+                </span>
+              </>
+            ) : (
+              <span>{t.saveBtn}</span>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   )

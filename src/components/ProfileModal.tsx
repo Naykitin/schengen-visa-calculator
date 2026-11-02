@@ -78,18 +78,25 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-      <div className="w-full sm:max-w-lg bg-slate-900 border border-slate-800 rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+      {/* Backdrop overlay for outside tap dismissal */}
+      <div className="fixed inset-0" onClick={onClose} aria-hidden="true" />
+
+      {/* Modal Card */}
+      <div className="relative z-10 w-full sm:max-w-lg bg-slate-900 border border-slate-800 rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[85dvh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-slide-up sm:animate-fade-in">
+        {/* Mobile Pull Bar Grabber */}
+        <div className="w-10 h-1.5 bg-slate-700/80 rounded-full mx-auto mt-2.5 mb-1 sm:hidden shrink-0" />
+
         {/* Modal Header */}
-        <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-800">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400">
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-800 shrink-0">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="p-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 shrink-0">
               <Users className="w-5 h-5" />
             </div>
-            <div>
-              <h3 className="text-base sm:text-lg font-bold text-white tracking-tight">
+            <div className="min-w-0">
+              <h3 className="text-base sm:text-lg font-bold text-white tracking-tight truncate">
                 {t.profilesTitle}
               </h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-400 truncate">
                 Schengen Visitors & EU Residents (All 27 EU Member States)
               </p>
             </div>
@@ -97,20 +104,22 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors"
+            className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors shrink-0 ml-2"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {error && (
-          <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-300">
-            {error}
-          </div>
-        )}
+        {/* Scrollable Body */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 overscroll-contain space-y-3.5">
+          {error && (
+            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-300">
+              {error}
+            </div>
+          )}
 
-        {/* Profiles List */}
-        <div className="space-y-3 mb-4">
+          {/* Profiles List */}
+          <div className="space-y-3">
           {data.profiles.map((profile) => {
             const isActive = profile.id === data.activeProfileId
             const colorOption = PROFILE_COLORS.find((c) => c.id === profile.color) || PROFILE_COLORS[0]
@@ -222,7 +231,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
         </div>
 
         {/* Add profile form */}
-        {isAdding ? (
+        {isAdding && (
           <form onSubmit={handleCreateProfile} className="p-4 bg-slate-950/80 border border-slate-800 rounded-2xl space-y-3.5 mt-4">
             <h4 className="text-xs font-bold text-slate-200">{t.addProfile}</h4>
 
@@ -322,26 +331,32 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               <button
                 type="button"
                 onClick={() => setIsAdding(false)}
-                className="flex-1 py-2 rounded-xl border border-slate-700 text-xs font-semibold text-slate-300 hover:bg-slate-800"
+                className="flex-1 py-2 rounded-xl border border-slate-700 text-xs font-semibold text-slate-300 hover:bg-slate-800 cursor-pointer"
               >
                 {t.cancelBtn}
               </button>
               <button
                 type="submit"
-                className="flex-1 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white shadow-md shadow-blue-600/30"
+                className="flex-1 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white shadow-md shadow-blue-600/30 cursor-pointer"
               >
                 {t.saveBtn}
               </button>
             </div>
           </form>
-        ) : (
-          <button
-            onClick={() => setIsAdding(true)}
-            className="w-full py-2.5 px-3 border border-dashed border-slate-700 hover:border-blue-500/60 rounded-2xl text-xs font-semibold text-slate-300 hover:text-blue-400 flex items-center justify-center gap-2 transition-all min-h-[44px]"
-          >
-            <Plus className="w-4 h-4" />
-            {t.addProfile}
-          </button>
+        )}
+        </div>
+
+        {/* Sticky Action Footer when not adding */}
+        {!isAdding && (
+          <div className="shrink-0 p-4 sm:p-5 border-t border-slate-800/80 bg-slate-900/95 backdrop-blur-md pb-[max(1.25rem,calc(env(safe-area-inset-bottom,0px)+0.75rem))]">
+            <button
+              onClick={() => setIsAdding(true)}
+              className="w-full py-2.5 px-3 border border-dashed border-slate-700 hover:border-blue-500/60 rounded-2xl text-xs font-semibold text-slate-300 hover:text-blue-400 flex items-center justify-center gap-2 transition-all min-h-[44px] cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              {t.addProfile}
+            </button>
+          </div>
         )}
       </div>
     </div>
