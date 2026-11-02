@@ -43,12 +43,12 @@ export const Header: React.FC<HeaderProps> = ({
     : '🇪🇺'
 
   return (
-    <header className="sticky top-0 z-30 bg-slate-950/85 backdrop-blur-md border-b border-slate-800 safe-top px-3.5 sm:px-6 pb-3 sm:pb-4 transition-all">
-      <div className="max-w-6xl mx-auto flex items-center justify-between gap-2">
+    <header className="sticky top-0 z-30 bg-slate-950/85 backdrop-blur-md border-b border-slate-800 safe-top px-3 sm:px-6 pb-2.5 sm:pb-4 transition-all w-full overflow-hidden">
+      <div className="max-w-6xl mx-auto flex items-center justify-between gap-1.5 sm:gap-2 min-w-0 w-full">
         {/* Left: Logo & Title & Profile Switcher */}
-        <div className="flex items-center gap-2.5 sm:gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-700 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20 border border-blue-400/30 shrink-0">
-            <span className="text-amber-300 font-black text-sm tracking-tighter">90</span>
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 shrink">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-blue-700 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20 border border-blue-400/30 shrink-0">
+            <span className="text-amber-300 font-black text-xs sm:text-sm tracking-tighter">90</span>
           </div>
 
           <div className="hidden sm:block">
@@ -64,18 +64,18 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Profile Switcher Pill */}
           <button
             onClick={onOpenProfileModal}
-            className="flex items-center gap-2 py-1 px-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs text-slate-200 transition-all active:scale-95 min-h-[36px]"
+            className="flex items-center gap-1.5 sm:gap-2 py-1 px-2 sm:px-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs text-slate-200 transition-all active:scale-95 min-h-[34px] sm:min-h-[36px] min-w-0"
             title={t.profilesTitle}
           >
-            <span className={`w-2.5 h-2.5 rounded-full ${profileColor.bg} inline-block`} />
-            <span className="font-semibold max-w-[100px] truncate">{activeProfile.name}</span>
-            <span className="text-xs">{countryFlag}</span>
+            <span className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full ${profileColor.bg} inline-block shrink-0`} />
+            <span className="font-semibold max-w-[65px] xs:max-w-[90px] sm:max-w-[120px] truncate">{activeProfile.name}</span>
+            <span className="text-xs shrink-0">{countryFlag}</span>
             <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
           </button>
         </div>
 
         {/* Center: Offline indicator & New version update banner */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {!isOnline && (
             <div className="flex items-center gap-1 text-[11px] font-semibold text-amber-300 bg-amber-500/15 border border-amber-500/30 px-2 py-1 rounded-xl">
               <WifiOff className="w-3.5 h-3.5" />
@@ -95,11 +95,11 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Right: Actions & Tools */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
           {/* Cloudflare Sync status button */}
           <button
             onClick={onOpenSyncModal}
-            className={`p-2 rounded-xl border text-xs font-medium transition-all active:scale-95 min-h-[36px] flex items-center gap-1.5 ${
+            className={`p-1.5 sm:p-2 rounded-xl border text-xs font-medium transition-all active:scale-95 min-h-[34px] sm:min-h-[36px] flex items-center gap-1.5 ${
               isSyncActive
                 ? 'bg-blue-500/10 text-blue-400 border-blue-500/30'
                 : 'text-slate-400 hover:text-white border-transparent hover:bg-slate-900'
@@ -115,7 +115,7 @@ export const Header: React.FC<HeaderProps> = ({
             <select
               value={lang}
               onChange={(e) => onSelectLanguage(e.target.value as Language)}
-              className="bg-slate-900 border border-slate-700/80 hover:border-slate-500 text-slate-200 text-xs font-bold rounded-xl pl-2.5 pr-7 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer transition-all min-h-[36px] appearance-none"
+              className="bg-slate-900 border border-slate-700/80 hover:border-slate-500 text-slate-200 text-xs font-bold rounded-xl pl-2 pr-5 sm:pr-7 py-1 sm:py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer transition-all min-h-[34px] sm:min-h-[36px] appearance-none"
               title="Select Language"
             >
               {SUPPORTED_LANGUAGES.map((l) => (
@@ -124,13 +124,13 @@ export const Header: React.FC<HeaderProps> = ({
                 </option>
               ))}
             </select>
-            <Globe className="w-3.5 h-3.5 text-slate-400 absolute right-2 pointer-events-none" />
+            <Globe className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-400 absolute right-1.5 sm:right-2 pointer-events-none" />
           </div>
 
           {/* Backup & Data Modal */}
           <button
             onClick={onOpenBackupModal}
-            className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-900 transition-colors min-h-[36px]"
+            className="p-1.5 sm:p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-900 transition-colors min-h-[34px] sm:min-h-[36px]"
             title={t.backupAndExport}
           >
             <Download className="w-4 h-4" />
@@ -139,19 +139,19 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Info Modal */}
           <button
             onClick={onOpenInfoModal}
-            className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-900 transition-colors min-h-[36px]"
+            className="p-1.5 sm:p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-900 transition-colors min-h-[34px] sm:min-h-[36px]"
             title={t.aboutRule}
           >
             <HelpCircle className="w-4 h-4" />
           </button>
 
-          {/* Primary Action Button: Add Trip */}
+          {/* Primary Action Button: Add Trip (Desktop & Tablet only; mobile uses bottom floating + button) */}
           <button
             onClick={onOpenAddModal}
-            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow-lg shadow-blue-600/30 active:scale-95 transition-all min-h-[36px]"
+            className="hidden sm:flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow-lg shadow-blue-600/30 active:scale-95 transition-all min-h-[36px]"
           >
             <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">
+            <span>
               {isResident ? t.logAbroadTripBtn : t.addTrip}
             </span>
           </button>
