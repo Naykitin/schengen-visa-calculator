@@ -83,7 +83,7 @@ export const StatusCard: React.FC<StatusCardProps> = ({
               {t.residentHeaderBadge(countryObj.name)}
             </span>
             <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-              183d Tax
+              Pan-European 183d
             </span>
           </div>
 
@@ -118,7 +118,7 @@ export const StatusCard: React.FC<StatusCardProps> = ({
                 className="text-[11px] text-blue-400 hover:text-blue-300 underline underline-offset-2 ml-1"
                 title="Switch mode"
               >
-                Switch to Schengen 90/180
+                {t.switchToSchengenBtn}
               </button>
             )}
           </div>
@@ -157,7 +157,7 @@ export const StatusCard: React.FC<StatusCardProps> = ({
               {resSummary.isTaxResidentSecured ? (
                 <span className="text-emerald-400 font-semibold flex items-center gap-1">
                   <ShieldCheck className="w-3.5 h-3.5 inline" />
-                  {t.taxRequirementMet(resSummary.taxTargetDays)}
+                  {t.taxRequirementMet(resSummary.taxTargetDays, countryObj.name)}
                 </span>
               ) : (
                 <span className="text-amber-400 font-medium">
@@ -289,7 +289,7 @@ export const StatusCard: React.FC<StatusCardProps> = ({
               className="text-[11px] text-emerald-400 hover:text-emerald-300 underline underline-offset-2 ml-1"
               title="Switch mode"
             >
-              Switch to Resident
+              {t.switchToResidentBtn}
             </button>
           )}
         </div>

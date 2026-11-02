@@ -84,7 +84,7 @@ export interface TranslationDictionary {
   daysOutsideCountry: string
   taxSecuredBadge: string
   taxNotYetSecuredBadge: string
-  taxRequirementMet: (target: number) => string
+  taxRequirementMet: (target: number, countryName?: string) => string
   taxDaysNeeded: (needed: number) => string
   safeRemainingAbroad: (days: number) => string
   taxLimitExceeded: string
@@ -99,6 +99,8 @@ export interface TranslationDictionary {
   permResidenceSafe: string
   permResidenceWarning: string
   singleTripViolationAlert: string
+  switchToResidentBtn: string
+  switchToSchengenBtn: string
 
   // Tabs & Navigation
   tabTrips: string
@@ -215,7 +217,7 @@ export const translations: Record<Language, TranslationDictionary> = {
 
     profilesTitle: 'Manage Profiles',
     addProfile: 'Add Profile',
-    profileNamePlaceholder: 'e.g. My TIE / Autónomo, Partner, Child',
+    profileNamePlaceholder: 'e.g. My TIE / Blue Card, Partner, Child',
     deleteProfile: 'Delete Profile',
     cannotDeleteOnlyProfile: 'Cannot delete the only profile.',
     myPassport: 'My Passport',
@@ -225,8 +227,9 @@ export const translations: Record<Language, TranslationDictionary> = {
     modeSchengen: '🇪🇺 Schengen Visitor (90/180)',
     modeSchengenDesc: 'For short-stay tourists & visitors without EU residency (max 90 days per 180-day window).',
     modeResident: '🌍 EU Resident & Tax Tracker',
-    modeResidentDesc: 'For TIE / Blue Card / Autónomo holders tracking 183-day tax residency & absences from home country.',
-    homeCountryLabel: 'Home Country of Residence',
+    modeResidentDesc:
+      'Pan-European tax residency (≥183 days) & absence limits for EU residence permit holders in any member state (Germany, Spain, Portugal, France, Italy, etc.).',
+    homeCountryLabel: 'Home Country of Residence (EU Member State)',
     taxTargetDaysLabel: 'Tax Residency Target Days',
 
     syncModalTitle: 'Cloudflare Cloud Sync',
@@ -274,17 +277,19 @@ export const translations: Record<Language, TranslationDictionary> = {
     recoveryTitle: 'Upcoming allowance recoveries:',
     daysGained: (days) => `+${days} days`,
 
-    residentHeaderBadge: (countryName) => `Resident of ${countryName}`,
-    taxYearTitle: (year) => `Tax & Residence Year ${year}`,
+    residentHeaderBadge: (countryName) => `EU Resident: ${countryName}`,
+    taxYearTitle: (year) => `EU Tax & Residence Year ${year}`,
     daysInCountry: (countryName) => `Days in ${countryName}`,
     daysOutsideCountry: 'Days Abroad (Absences)',
-    taxSecuredBadge: 'Tax Residency Secured (183+ Days)',
+    taxSecuredBadge: 'EU Tax Residency Secured (≥183 Days)',
     taxNotYetSecuredBadge: 'Tax Target in Progress',
-    taxRequirementMet: (target) => `Requirement met! Spent ≥${target} days in country this calendar year.`,
-    taxDaysNeeded: (needed) => `Need ${needed} more days in country to secure 183-day tax residency.`,
+    taxRequirementMet: (target, countryName) =>
+      `Requirement met! Spent ≥${target} days in ${countryName || 'home country'} this calendar year (EU tax residency secured).`,
+    taxDaysNeeded: (needed) =>
+      `Need ${needed} more days in home country to secure 183-day EU tax residency.`,
     safeRemainingAbroad: (days) => `Safe remaining absence allowance: ${days} days`,
     taxLimitExceeded: 'Exceeded 182-day absence limit (risk for tax residency)',
-    taxMilestone183: '183-Day Tax Milestone',
+    taxMilestone183: 'Pan-European 183-Day Tax Threshold',
     abroadTripListTitle: 'Trips Abroad & Absences',
     logAbroadTripBtn: '+ Log Trip Abroad',
     abroadTripModalTitle: 'Log Trip Abroad / Absence',
@@ -295,6 +300,8 @@ export const translations: Record<Language, TranslationDictionary> = {
     permResidenceSafe: '5-Year Larga Duración quota is healthy',
     permResidenceWarning: 'Warning: 5-year absence exceeds 300-day EU threshold',
     singleTripViolationAlert: 'Warning: A single trip exceeded 6 months continuous absence.',
+    switchToResidentBtn: 'Switch to EU Resident',
+    switchToSchengenBtn: 'Switch to Schengen 90/180',
 
     tabTrips: 'Trips',
     tabPlanner: 'Planner',
@@ -374,20 +381,20 @@ export const translations: Record<Language, TranslationDictionary> = {
     importSuccess: (count) => `Successfully imported ${count} trips!`,
     importError: (err) => `Failed to import: ${err}`,
 
-    infoModalTitle: 'How Does the 90/180 Rule Work?',
-    infoMainPrincipleTitle: 'The 90/180 Principle',
+    infoModalTitle: 'How Do Schengen & Residence Rules Work?',
+    infoMainPrincipleTitle: '1. Schengen 90/180 Rule (For Visitors)',
     infoMainPrincipleText:
       'Non-EU citizens visiting the Schengen Area on visa-free travel or short-stay Type C visas can stay for a maximum of 90 days within any 180-day rolling period (EU Regulation 2016/399).',
-    infoSlidingWindowTitle: 'What is a "Rolling Window"?',
+    infoSlidingWindowTitle: '2. Pan-European 183-Day Tax Residency',
     infoSlidingWindowText:
-      'The 180-day window is not fixed to calendar halves or quarters. On each and every single day you spend in the Schengen Area, border authorities look back exactly 180 days. Your total stay during that window must never exceed 90 days.',
-    infoKeyRulesTitle: 'Crucial Calculation Rules:',
+      'Across all EU member states (Germany, Spain, Portugal, France, Italy, etc.), staying ≥183 days in your country of residence within a calendar year secures tax residency and demonstrates compliance for work/residence permits.',
+    infoKeyRulesTitle: '3. EU Permanent Residence (Directive 2003/109/EC):',
     infoRule1:
-      'Entry and exit dates: Both entry and exit dates count as full days in Schengen, regardless of arrival or departure hour.',
+      'For EU Long-Term / Permanent Residence (Larga Duración / Niederlassungserlaubnis), cumulative absences over 5 years must not exceed 10 months (300 days), and no single trip may exceed 6 consecutive months.',
     infoRule2:
-      'Allowance recovery: As time advances past 180 days since an old trip, those past days drop out of the sliding window, freeing up your allowance.',
+      'Schengen Allowance Recovery: As time advances past 180 days since an old tourist trip, those days drop out of the rolling lookback window.',
     infoRule3:
-      'National Visas & Residence Permits: Stays authorized under a national long-stay visa (Type D) or residence permit (TIE, Blue Card) do not count against the 90-day Schengen visitor allowance.',
+      'Multi-Profile Freedom: Maintain separate profiles on the same device — e.g. one for your EU Residence & Tax status, and another for visiting family members under the 90/180 rule.',
     infoOpenSourceBadge: 'Open-Source (MIT License)',
 
     desktopShortcutsHint: 'Shortcuts: N — new trip, Esc — close modal, 1/2/3 — switch views',
@@ -407,7 +414,7 @@ export const translations: Record<Language, TranslationDictionary> = {
 
     profilesTitle: 'Управление профилями',
     addProfile: 'Добавить профиль',
-    profileNamePlaceholder: 'Например: Мой TIE / Autónomo, Супруг, Ребёнок',
+    profileNamePlaceholder: 'Например: ВНЖ / Blue Card / Autónomo, Супруг, Ребёнок',
     deleteProfile: 'Удалить профиль',
     cannotDeleteOnlyProfile: 'Нельзя удалить единственный профиль.',
     myPassport: 'Мой паспорт',
@@ -417,8 +424,9 @@ export const translations: Record<Language, TranslationDictionary> = {
     modeSchengen: '🇪🇺 Гость Шенгена (90/180)',
     modeSchengenDesc: 'Для туристов и визитёров без ВНЖ ЕС (максимум 90 дней за скользящие 180 дней).',
     modeResident: '🌍 Резидент ЕС и налоги (183 дня)',
-    modeResidentDesc: 'Для обладателей ВНЖ / TIE / Autónomo: контроль 183 дней налогового резидентства и выездов за границу.',
-    homeCountryLabel: 'Страна постоянного проживания',
+    modeResidentDesc:
+      'Общеевропейское налоговое резидентство (≥183 дней) и лимиты выездов для обладателей ВНЖ/ПМЖ в любой стране ЕС (Германия, Испания, Португалия, Франция, Италия и др.).',
+    homeCountryLabel: 'Страна постоянного проживания (страна ЕС)',
     taxTargetDaysLabel: 'Дней для налогового резидентства',
 
     syncModalTitle: 'Облачная синхронизация Cloudflare',
@@ -467,27 +475,32 @@ export const translations: Record<Language, TranslationDictionary> = {
     recoveryTitle: 'Ближайшие дни возврата лимита:',
     daysGained: (days) => `+${days} дн.`,
 
-    residentHeaderBadge: (countryName) => `Резидент: ${countryName}`,
-    taxYearTitle: (year) => `Налоговый год ${year}`,
-    daysInCountry: (countryName) => `Дней в стране (${countryName})`,
+    residentHeaderBadge: (countryName) => `Резидент ЕС: ${countryName}`,
+    taxYearTitle: (year) => `Налоговый год ЕС ${year}`,
+    daysInCountry: (countryName) => `Дней в стране проживания (${countryName})`,
     daysOutsideCountry: 'Дней за границей (выезды)',
-    taxSecuredBadge: 'Налоговый статус подтверждён (183+ дн.)',
+    taxSecuredBadge: 'Налоговый статус ЕС подтверждён (≥183 дн.)',
     taxNotYetSecuredBadge: 'Набор дней до 183 в процессе',
-    taxRequirementMet: (target) => `Условие выполнено! Проведено ≥${target} дней в стране в этом календарном году.`,
-    taxDaysNeeded: (needed) => `Нужно провести ещё ${needed} дн. в стране для закрепления 183-дневного статуса.`,
+    taxRequirementMet: (target, countryName) =>
+      `Условие выполнено! Проведено ≥${target} дней в ${countryName || 'стране проживания'} в этом году (налоговый статус ЕС подтверждён).`,
+    taxDaysNeeded: (needed) =>
+      `Нужно провести ещё ${needed} дн. в стране проживания для закрепления 183-дневного статуса ЕС.`,
     safeRemainingAbroad: (days) => `Осталось безопасных дней выезда: ${days} дн.`,
     taxLimitExceeded: 'Превышен лимит отсутствия (182 дня) — риск для налогового статуса',
-    taxMilestone183: 'Налоговый порог 183 дней',
+    taxMilestone183: 'Общеевропейский налоговый порог 183 дней',
     abroadTripListTitle: 'Выезды за границу и отсутствие',
     logAbroadTripBtn: '+ Записать выезд',
     abroadTripModalTitle: 'Записать выезд за границу',
     abroadTripEditModalTitle: 'Редактировать выезд',
     abroadDuration: (days) => `За границей ${days} дн.`,
-    permResidence5YearTitle: 'ПМЖ ЕС (Директива 2003/109/EC — Larga Duración)',
-    permResidence5YearDesc: (used, limit) => `Выездов за последние 5 лет: ${used} из ${limit} разрешённых дней (макс 10 мес).`,
+    permResidence5YearTitle: 'ПМЖ ЕС (Директива 2003/109/EC — Larga Duración / Niederlassung)',
+    permResidence5YearDesc: (used, limit) =>
+      `Выездов за последние 5 лет: ${used} из ${limit} разрешённых дней (максимум 10 месяцев).`,
     permResidenceSafe: 'Квота отсутствия для ПМЖ в отличной форме',
     permResidenceWarning: 'Внимание: выезды за 5 лет превышают лимит 300 дней',
     singleTripViolationAlert: 'Внимание: один из выездов длился более 6 месяцев непрерывно.',
+    switchToResidentBtn: 'Переключить на Резидент ЕС',
+    switchToSchengenBtn: 'Переключить на Шенген 90/180',
 
     tabTrips: 'Поездки',
     tabPlanner: 'Планировщик',
@@ -567,20 +580,20 @@ export const translations: Record<Language, TranslationDictionary> = {
     importSuccess: (count) => `Успешно импортировано ${count} поездок!`,
     importError: (err) => `Ошибка импорта: ${err}`,
 
-    infoModalTitle: 'Как работают правила Шенгена и резиденции?',
-    infoMainPrincipleTitle: '1. Правило Шенгена 90/180 (для гостей)',
+    infoModalTitle: 'Как работают правила Шенгена и резиденции ЕС?',
+    infoMainPrincipleTitle: '1. Правило Шенгена 90/180 (для гостей и туристов)',
     infoMainPrincipleText:
       'Граждане стран с безвизовым режимом или обладатели краткосрочных виз категории C могут находиться в странах Шенгенского соглашения максимум 90 дней в течение любого 180-дневного скользящего периода (Регламент ЕС 2016/399).',
-    infoSlidingWindowTitle: '2. Налоговое резидентство ЕС (183 дня)',
+    infoSlidingWindowTitle: '2. Общеевропейское налоговое резидентство (183 дня)',
     infoSlidingWindowText:
-      'Для обладателей ВНЖ/TIE и Autónomo во всех странах ЕС действует базовое правило: проживание не менее 183 дней в календарном году в стране резиденции гарантирует налоговый статус и отсутствие претензий со стороны налоговых органов (Hacienda).',
+      'Во всех странах ЕС (Германия, Испания, Португалия, Франция, Италия и др.) проживание не менее 183 дней в календарном году в стране резиденции гарантирует налоговый статус и отсутствие претензий со стороны налоговых органов (Finanzamt / Hacienda).',
     infoKeyRulesTitle: '3. ПМЖ ЕС (Директива 2003/109/EC):',
     infoRule1:
-      'Для бессрочного ПМЖ (Larga Duración) суммарное отсутствие в стране за 5 лет не должно превышать 10 месяцев (300 дней), и ни один выезд не должен длиться дольше 6 месяцев подряд.',
+      'Для бессрочного ПМЖ (Larga Duración / Niederlassungserlaubnis / Daueraufenthalt-EU) суммарное отсутствие в стране за 5 лет не должно превышать 10 месяцев (300 дней), и ни один выезд не должен длиться дольше 6 месяцев подряд.',
     infoRule2:
       'Возврат дней в Шенгене: когда проходит 180 дней с момента давней туристической поездки, эти дни «сгорают» из расчёта, освобождая ваш лимит.',
     infoRule3:
-      'Раздельные профили: в нашем приложении вы можете создать один профиль для своего ВНЖ/Автономо, а другой — для туристического шенгенского паспорта родственников.',
+      'Раздельные профили: в нашем приложении вы можете создать один профиль для своего ВНЖ/Автономо в любой стране ЕС, а другой — для туристического шенгенского паспорта родственников.',
     infoOpenSourceBadge: 'Open-Source (MIT License)',
 
     desktopShortcutsHint: 'Горячие клавиши: N — новая поездка, Esc — закрыть, 1/2/3 — вкладки',
